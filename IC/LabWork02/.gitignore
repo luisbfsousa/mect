@@ -1,0 +1,7 @@
+src/build/
+/bin/
+
+*.o
+*.out
+*.log
+*.tmp

@@ -1,0 +1,31 @@
+1.
+Todos os terminais da VLAN 6 na edificio 2, porque estao na mesma rede e são encaminhadas pelos switches.
+Todos os terminais da VLAN 6 no edificio 1, porque sao encaminhados pelas portas passivas do
+
+Atinge todos os terminais da VLAN 6 do edificio 1 e 2, porque existe conectividade por portas trunk que passam a VLAN 6 pelos SWL3 C1 e C2.
+Chega a todos os SWL3 porque têm conexões trunk entre eles todos e ao fazerem um broadcast atingem todos os terminais com trunk para VLAN 6.
+Não atinge os routers A, B, 1, 2, DataCenter, DMZ e edificio antigo porque não têm ligações trunk.
+
+2.
+R1 - RA - C2 - F1 -> 50+3
+R1 - RA - C1 - F1 -> 50+3
+R1 - RB - C2 - F1 -> 50+3
+R1 - RB - C1 - F1 -> 50+3
+São os caminhos mais baratos
+Temos 4, cada com custo de 53
+
+3.
+(i) Para dividir em 50% o tráfego entre o R1 e R2, basta mudarmos a metrica do R2 para um valor base de 50.
+(ii) De forma a criar uma backup link para o R3, atribuiamos uma floating static route no Router B com um valor acima de 200.
+
+4.
+Para os pacotes que chegam aos SWL3 F1 e F2 para a Internet seguirem pelo SWL3 C1 temos que aumentar os valores de ligação das interfaces
+dos SWL3 F1 e F2 que ligam ao C2.
+
+5.
+Routing redistribution -> routing para sistemas com protocolos diferentes
+Mantendo o RIP no edificio antigo, configuramos as interfaces de C1 e C2 que ligam ao edificio antigo para fazer redistribuiçao de rotas
+para a internet.
+Temos ainda que configurar/criar um rota estatica do RX para o C1 e C2.
+
+6.

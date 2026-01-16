@@ -1,0 +1,51 @@
+server:
+  port: 0  # Random port for tests
+
+spring:
+  application:
+    name: shophub-backend-test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+  
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_PUBLIC_URL:${KEYCLOAK_URL:http://localhost:8080}}/realms/test
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/test/protocol/openid-connect/certs
+
+# Disable security for testing
+keycloak:
+  url: ${KEYCLOAK_URL:http://localhost:8080}
+  public-url: ${KEYCLOAK_PUBLIC_URL:${KEYCLOAK_URL:http://localhost:8080}}
+  realm: test
+  client-id: test-client
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.shophub: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: DEBUG
+    org.testcontainers: INFO
+
+flagsmith:
+  enabled: false

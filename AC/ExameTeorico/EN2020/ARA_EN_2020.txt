@@ -1,0 +1,85 @@
+1.
+AS Multi-homed -> tudo o que não é stub (ou seja, comunica com mais do que uma AS). 
+(Stub é uma ponta, que comunica só com 1 AS).
+Não transitivo só comunica com pacotes seus, portanto só anuncia as suas redes.
+Transitivo dá forwarding de pacotes que não são para si (pacotes para AS com que 
+tem conectividade), 
+portanto anuncia os IPs a que tem conectividade, exceto os IPs do AS com que está a 
+comunicar.
+
+2.
+a)
+Para que isto aconteça, temos que alterar preferências locais, visto que quanto maior 
+o valor, maior prioridade, vamos atributir um valor
+de preferencia com a seguinte relação C > B > A (sendo que o A pode ser o valor mínimo).
+
+b)
+Como a escolha do caminho depende de informação remota não acessível nos anúncios de rotas,
+deverá contratualizar-se 
+com os operadores vizinhos a marcação dos anúncios BGP com uma comunidade 
+(atributo COMMUNITY) de acordo com o link usado. 
+Localmente, para todos os anúncios recebidos do vizinho em causa, e em função da
+comunidade (caso exista nos anúncios) 
+deverá definir-se uma preferência local maior ou menor (de acordo com o link usado 
+remotamente).
+
+c)
+Cria-se Local Preference com prefixo (da rede pretendida, neste caso chinesa), ao 
+invés de overall local preference.
+
+d)
+Definia-se um filtro para os AS que pertencem aos EUA ou à Rússia.
+
+3.
+a)
+-> Mensagens de discovery 
+	Envia hello messages por multicast sobre UDP para os vizinhos saberem que ele 
+existe
+	Após o vizinho receber a mensagem, estebelece uma sessão LDP sobre TCP 
+(iniciada pelo vizinho)
+-> Mensagens de sessão 
+	(Inizialization)
+	KeepAlives depois de ser iniciadas
+-> Mensagens de advertisement
+	Address Message
+	Onde se colocam as labels
+
+b)
+RSVP-TE usando ISIS-TE ou OSPF-TE 
+Para estabelecer os tuneis:
+Signalling -> reconhece os paths possiveis
+Calcula o path mais curto.
+Manda mensagem de RSVP path e manda às estações, que depois devolvem com 
+mensagem de RESV com as reservas que precisam de bandwith para cada um.
+
+c)
+Uma MPLS VPN é uma implementação possível de uma site-to-site VPN, a qual permite o 
+encaminhamentode tráfego entre 
+múltiplos nós/sites independentemente do encaminhamento do core da rede. A definição de 
+uma VPN MPLS deverá começar 
+pela definição de uma instância de encaminhamento (VRF) distinta para aVPN em cada nó 
+responsável por interligar os  sites. 
+Cada instância é univocamente identificada pelo  RouteDistinguisher (RD). 
+Deverá existir um protocolo que permita a definição de 
+um MPLS LSP entre os nós daVPN (LDP ou RSVP-TE). As rotas de cada site 
+(e MPLS associado à VPN com o RD) da VPN serão trocadaspor 
+MP-BGP usando a família de endereços VPN IPv4 ou VPN IPv6.
+Nota: por definição uma VPN é uma rede privada virtual.
+A privacidade pode ser a vários níveis (ex: routing oudados) e não é segura por omissão!
+
+4.
+a)
+Register, Invite, Trying, Ringing e 200 OK até ao BYE.
+
+b)
+Quando tens uma chamada dentro da mesma operadora o utilizador que quer fazer 
+a chamada faz um invite para o proxy
+e o proxy que conhece o cliente manda o invite direto.
+Com operadoras externas o cliente que quer fazer chamada manda um invite para o proxy , 
+este reconhece que o DNS que vem na chamada não
+é da sua operadora e por isso pede a esse DNS server o IP da operadora requirida. 
+Com esse IP dá redirect do pacote para o SIP proxy.
+O SIP Proxy de destino é que faz o INVITE para o cliente correto.
+
+c)
+Caga nisso

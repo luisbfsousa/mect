@@ -1,0 +1,42 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - http://131.163.96.54:3000
+          allowed_headers:
+            - traceparent
+            - tracestate
+            - content-type
+            - authorization
+          allowed_methods: [GET, POST, OPTIONS]
+
+processors:
+  batch: {}
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:9464
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    labels:
+      job: backend
+  logging:
+    loglevel: info
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [loki]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging]

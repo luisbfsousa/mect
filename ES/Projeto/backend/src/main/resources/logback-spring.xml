@@ -1,0 +1,74 @@
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <springProperty name="LOG_DIR" source="LOG_DIR" defaultValue="logs"/>
+    <springProperty name="APP_ENV" source="SPRING_PROFILES_ACTIVE" defaultValue="local"/>
+
+    <timestamp key="BY_DATE" datePattern="yyyy-MM-dd"/>
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>@timestamp</fieldName>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "application":"shophub-backend",
+                        "environment":"${APP_ENV}"
+                        }
+                    </pattern>
+                </pattern>
+                <logLevel/>
+                <threadName/>
+                <loggerName/>
+                <message/>
+                <arguments/>
+                <mdc/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/backend.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/backend-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>14</maxHistory>
+            <maxFileSize>20MB</maxFileSize>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>@timestamp</fieldName>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "application":"shophub-backend",
+                        "environment":"${APP_ENV}"
+                        }
+                    </pattern>
+                </pattern>
+                <logLevel/>
+                <threadName/>
+                <loggerName/>
+                <message/>
+                <arguments/>
+                <mdc/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.springframework" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+        <appender-ref ref="JSON_FILE"/>
+    </root>
+</configuration>

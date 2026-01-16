@@ -1,0 +1,251 @@
+# Software Engineering - Comprehensive Exam
+
+**Student Name:** ________________________  
+**Student Number:** ________________________  
+**Date:** ________________________
+
+---
+
+## Instructions
+- **Duration:** 120 minutes
+- **Total Points:** 100 points
+- **Section A (True/False):** 20 points (1 point each)
+- **Section B (Multiple Choice):** 40 points (2 points each)
+- **Section C (Short Development):** 40 points
+
+---
+
+## Section A: True or False (20 points)
+
+Mark **T** for True or **F** for False.
+
+F   1. **___** In Scrum, the Product Owner is responsible for removing impediments to the team's progress.
+
+T   2. **___** DevSecOps integrates security practices into every phase of the DevOps process.
+
+F   3. **___** In vertical slicing, work is divided along technical layers like frontend, backend, and database.
+
+T  4. **___** Feature toggles allow features to be turned on or off without deploying new code.
+
+F  5. **___** SAST (Static Application Security Testing) scans running applications to find vulnerabilities.
+
+T   6. **___** The Definition of Done is a formal description of when an Increment meets quality requirements.
+
+F   7. **___** In Blue/Green deployments, both environments run simultaneously with traffic split between them.
+
+T   8. **___** MLOps extends DevOps principles to address machine learning-specific needs like model versioning and continuous training.
+
+F   9. **___** Story points are absolute time measurements used to estimate task duration.
+
+T   10. **___** Pre-commit hooks can prevent secrets like API keys from being committed to version control.
+
+T  11. **___** Observability explains why something happens, while monitoring alerts when it happens.
+
+F  12. **___** Infrastructure as Code (IaC) tools like Terraform work only with AWS cloud provider.
+
+F  13. **___** A canary release exposes a new version to all users immediately to gather feedback quickly.
+
+T   14. **___** The strangler pattern allows you to incrementally replace an old system by routing traffic through a proxy.
+
+F   15. **___** In LLMOps, the main asset is only the trained model, similar to traditional MLOps.
+
+T  16. **___** RASP (Runtime Application Self-Protection) can block SQL injection attacks in real-time without crashing the application.
+
+F  17. **___** Threat modeling should only be performed after the application is deployed to production.
+
+F  18. **___** Unit tests provide high confidence that components work well together in production.
+
+T  19. **___** SLIs (Service Level Indicators) are quantitative measures, while SLOs (Service Level Objectives) are target values for those measures.
+
+T  20. **___** In Agile methodology, responding to change is valued over following a plan.
+
+   ---
+
+## Section B: Multiple Choice (40 points)
+
+Select the **one best answer** for each question.
+
+### Software Engineering Principles & Agile
+
+21. Which of the following is NOT one of the three Scrum roles?
+   - A) Product Owner
+   - B) Scrum Master
+   - C) Project Manager ? aparentemente esta ?
+   x D) Developer
+
+22. What is the primary purpose of the Daily Scrum?
+   - A) To report progress to management
+   x B) To synchronize work and plan the next 24 hours
+   - C) To review completed user stories
+   - D) To estimate story points
+
+23. According to the INVEST criteria, a good user story should be:
+   - A) Large, comprehensive, and detailed
+   x B) Independent, negotiable, valuable, estimable, small, and testable
+   - C) Technical, complex, and innovative
+   - D) Written by the Product Owner only
+
+### Requirements & Software Components
+
+24. What is an epic in Agile terminology?
+   - A) A single user story that takes one sprint
+   x B) A large user story that can't be completed in a single sprint
+   - C) A technical task assigned to developers
+   - D) A bug that needs immediate fixing
+
+25. Horizontal slicing results in:
+   - A) Deployable features that deliver user value
+   x B) Technical tasks that don't provide value until all layers are complete
+   - C) Smaller, more manageable user stories
+   - D) Better integration between components
+
+### CI/CD & Deployment
+
+26. What is the main differentiator between Continuous Delivery and Continuous Deployment?
+   - A) Continuous Deployment requires more testing
+   x B) Continuous Delivery requires a manual approval step before production
+   - C) Continuous Deployment only works with microservices
+   - D) There is no difference
+
+27. In GitHub Actions, what triggers a workflow?
+   - A) Only manual button clicks
+   x B) Events like push, pull request, or scheduled cron jobs
+   - C) Only code commits to the main branch
+   - D) Database changes
+
+28. What is the purpose of a Docker multi-stage build?
+   - A) To run multiple containers simultaneously
+   x B) To create smaller, more efficient images by separating build and runtime dependencies
+   - C) To deploy to multiple environments
+   - D) To enable horizontal scaling
+
+### Infrastructure & Testing
+
+29. Which statement about Infrastructure as Code (IaC) is correct?
+   - A) It requires manual configuration for each deployment
+   x B) It defines infrastructure in declarative text files that can be version controlled
+   - C) It only works with on-premise servers
+   - D) It replaces the need for Docker containers
+
+30. What is the main advantage of the test pyramid approach?
+   x A) Having more UI tests than unit tests
+   - B) Having a balanced distribution with more unit tests at the base    ? esta ?
+   - C) Only testing the user interface
+   - D) Eliminating the need for integration tests
+
+31. Which type of testing examines running applications from the outside, like a hacker would?
+   - A) SAST (Static Application Security Testing)
+   x B) DAST (Dynamic Application Security Testing)
+   - C) Unit Testing
+   - D) Integration Testing
+
+### DevSecOps & Security
+
+32. What does "Shift Left" mean in DevSecOps?
+   x A) Moving security testing earlier in the development lifecycle
+   - B) Changing the team seating arrangement
+   - C) Deploying to the left-most server
+   - D) Testing only at the end of development
+
+33. Which tool would you use for Software Composition Analysis (SCA)?
+   x A) A tool that checks open-source libraries for known vulnerabilities
+   - B) A code formatter
+   - C) A deployment orchestrator
+   - D) A database migration tool
+
+34. What is the purpose of "Breaking the Build" in a CI/CD pipeline?
+   - A) To slow down development intentionally
+   x B) To stop deployment if critical vulnerabilities are detected
+   - C) To force developers to work overtime
+   - D) To test disaster recovery procedures
+
+### Monitoring & Observability
+
+35. What are the three pillars of observability?
+   x A) Logs, Metrics, and Traces
+   - B) CPU, Memory, and Disk
+   - C) Frontend, Backend, and Database
+   - D) Development, Staging, and Production
+
+36. What does a Span represent in distributed tracing?
+   - A) The total time a service is running
+   x B) An operation within a transaction with timing and context
+   - C) The physical distance between servers
+   - D) A unit of memory allocation
+
+37. An SLO (Service Level Objective) of "99.9% availability over 30 days" means:
+   x A) The system can be down for about 43 minutes per month
+   - B) The system must never go down
+   - C) 99.9% of features must work
+   - D) Only 0.1% of users will experience issues
+
+### MLOps & LLMs
+
+38. What is the main difference between MLOps and traditional DevOps?
+   - A) MLOps doesn't use version control
+   x B) MLOps must version code, data, and models, plus handle continuous training
+   - C) MLOps is only for cloud deployments
+   - D) There is no difference
+
+39. In LLMOps, what is RAG (Retrieval Augmented Generation)?
+   - A) A new type of neural network architecture
+   x B) Providing relevant information from a vector database instead of training the LLM on company data  ? why ?
+   - C) A deployment strategy for large models
+   - D) A testing framework for prompts
+
+40. What is the "cold start problem" in ML systems?
+   - A) Models performing poorly when servers restart
+   x B) Models needing to make predictions for new users without historical data
+   - C) Slow initial training times
+   - D) Database connection issues
+
+   ---
+
+## Section C: Short Development Questions (40 points)
+
+Answer the following questions with brief but complete responses.
+
+### Question 1 (10 points)
+You are implementing a new "Password Reset" feature. Write:
+- **a)** A user story following the standard format (3 points)
+- **b)** Three acceptance criteria using Given-When-Then format (7 points)
+
+**Answer:**
+
+---
+
+### Question 2 (10 points)
+Explain the difference between a Canary Release and a Blue/Green Deployment. Include when you would choose each strategy and what their main advantages are.
+
+**Answer:**
+
+---
+
+### Question 3 (10 points)
+Your team is working on a legacy system with no tests. You need to refactor a critical 2000-line function. Describe the step-by-step approach you would take, referencing at least three practices from the "Nine practices to extend the life of software."
+
+**Answer:**
+
+---
+
+### Question 4 (10 points)
+Design a simple CI/CD pipeline for a web application with a React frontend and Spring Boot backend. Include:
+- **a)** The main stages of the pipeline (3 points)
+- **b)** What types of tests you would run at each stage (4 points)
+- **c)** What security checks you would include (3 points)
+
+**Answer:**
+
+---
+
+## Bonus Question (5 points)
+
+Explain how you would use both vertical slicing and feature toggles together to safely deploy a major new feature to production while minimizing risk. Provide a specific example scenario.
+
+**Answer:**
+
+---
+
+**END OF EXAM**
+
+Good luck!

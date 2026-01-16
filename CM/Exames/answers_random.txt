@@ -1,0 +1,201 @@
+Tá cheio de erros ortograficos é vida
+
+1.Quais são os aspetos negativos de implementação de NFV.
+
+Os aspetos que podem afetar negativamente uma implentação de NFV, são as seguintes:
+performance
+interoperabilidade
+segurança 
+complexidade
+
+Performance é pior porque num NFV os recursos virtualizados tem um ovehead de acesso aos recursos fisicos.
+A interoperabilidade é pior quando tentamos fazer uso de nfvs comsistmeas que usem hardare legacy.
+A segurança tem vantages e desvantagens porque tem mais pontos de acesso , logo mais vulnerabilidades no entanto a virtualização tem melhor monotorização , contenção e recuperação.
+Um sistema NFV é mais complexo porque implica a simulação de um sistema fisico em software.
+
+2.Wich fundamental aspects Would you use to characterize 5g networks?
+
+Redes 5Gtem como aspetos fulcrais melhor performance(bandwidth, bitrate, menor latency, maior capacidade e segurança).Para além dos anteriores existe a capacidade de slicing , virtualização e melhor gestão de rede.A gestão de rede é optimizada pois o 5G separa a arquitetura em  planes data, control e user esta separação implica inerentemente uma melhor separação dos diferentes sistemas, tirando vantagem de várias bases de dados para utilizadores , funções e especificações da rede. A virtualização da rede faz uso de slicing que consiste na divisão da rede em de acordo com os requisitos dos dispositivos e utilizadores finais.Por exemplo podem ser criadas slices, uma slice pode ser utilzada para tráfego que garanta boa quality of service para situações de baixa latência como por exemplo jogos online. E outra slice configurada para dispositivos IOT em que a latência não é um grande fator no funcionamento de esses dispositvos.
+
+
+3.Why could be the reason to use ble over zigbee
+
+BLE é melhor em vários aspetos tem bitrate superior ,menor latência, melhor segurança, maior interopelabildade e menor custo energético e de implementação e maior compatibilidade. No entanto contem menor range e menor limite de dispositivos. Logo o BLE é melhor para redes de sensores de curto a médio alcance, com vários manufatores e tipos de dispositivos quão uma quantidade reduzida.(meter palha para chegar a uma página)
+
+4.What is the purpose of GTS in zigbee
+
+GTS em zigbee foi desenvolvido para que numa rede de zigbee com beacon enabled consiga com maior faciclidade garantir QoS para os dispositivos que o necessitam e para aumentar a fiebilidade do sistema, garantindo que um dispositivo consiga comunicar apesar de existirem muitos mais dispositivos na rede.
+
+5.Why is it frequently said that BLE is not bluetooth
+
+Uma das principais diferences reside no seu consumo de energia, o GAT e a diferença entre banda larga. O facto de não serem compatíveis entre si. BLE tem menores packets e existem connection interval o que significa que os dispositivos podem estar dormentes durante maior parte do tempo.O objetivo final também é diferente pois o BLE tem como finalidade utilização em sensor networks e standby de dispositivos, enquanto que o bluetooth tem como objetivo subsituição de cabo.
+
+6.Why are sensors connected to gateways and not to the internet. 
+
+escalabilidade, segurança, interoperabilidade , gestão de dados , consumo de energia , menor custo de implementação , menor latência , maior alcance e menor processamento.
+
+7.Why was loraWan developed wasn't lora enough?
+
+Lora é apenas a camada física loraWan é o protocolo open-source que opera sobre lora.LoraWan trabalha na MAC layer e foi criado pois lora é semi-proprietário e para garantir compatibilidade entre dispositivos.Este Standar adicional permite criar um conceito de rede. 
+
+
+8. O que é o efeito multipath é benefico ou prejudicial 
+
+Multipath é o efeito em que um sinal pode chegar a um destino por percursos diferentes.Pode ser cirado pelos seguintes efeito reflexão, refração ou scattering(explicar os 3 ). Estes efeitos tem vantagens e desvantajens, para além de introduzirem redundÂncia que permitem rebustez e correção de erros, este efeitos podem também permitir obter um maior alcançe do sinal.As desvantagem podem ser a degradação do sinal antes de alcançar o destino final, para além de isso a ocorencia de estes efeitos pode levar a um congestionamento do meio como por exemplo colisão entre pacotes e sobrecarrega do destino.
+
+9.Identifique 3 desafios caracteristicos de uma rede de sensores
+
+-Power effeciency
+-Scalability
+-Deployment Cost
+-Fairness
+
+10.Porque foram desenvolvidos perfis no bluetooth
+
+Devido á elevada diversidade de dispositivos que utilizam bluetooth , os perfis permitem a comunicação entre si das suas capacidades e requsitos simplificando a sua comunicação e melhorando a interoperabilidade.
+
+11. O Contexto PDP é muito importante para redes móveis explica porquê.
+
+O contexto PDP é o protocolo que auxilia o flow de dados que vão do GMS para a internet este flow de ddados vem do GTP.
+
+12.Porque é que não se usam técnicas MIMO em WSN 
+
+ninguém sabe responder
+
+
+13. Wifi foi evoluindo até que o tamaho do header se tornou um problema
+
+Wifi header foi incrementando até se tornar um tamanho considerável do pacote, logo para resolver este problema foi implementado complressão de headers consitindo de eleminação de redundância e agragação de pacotes.
+
+14.Mutas tecnologias de comunicações móveis usam tecnincas de espalhamento de espetro que vantegens estas técnicas providenciam.
+
+Estas tecnincas consitindo na dispersão aa comunicação por várias frequencias em sincronização entre recetor e emissor. Esta téncina permite mais segurnaça dificultando téncinas como eavesdropping e jamming numa certa frequência. Também reduz a congestão em certas frequencias.
+
+15. Que desafios antevê em desligar redes GSM para suportar apenas redes LTE
+
+Custo de novas infrastreturas, dispostivos mais velhos teriam de ser descartados, incremento da complexidade nas comunicações, Processo de migração demorado (METER PALHA QUE FODE).
+
+
+16.Como descreve as consequencias das redes legadas no desenvolvimento de novasgerações
+
+
+Backwards compatability, possibilidade de reaproveitamento de infraestruturas, problemas no deployment, aumento da complexidade no desenvolvimento da tecnologia, e gestão de o espectro entre gerações.
+
+17.Apresente dois fatores para o aumento da qualidade de redes wireless
+
+mais useres , mais tipos de dados mais dispositivos
+
+18. Como é que Wi-fi aborda a utilização de diferentes bitRates
+
+"Copiar do pedro" Algoritmos e monotorização slide 128.
+
+19.Como se pode formar uma scatternet
+
+Várias piconets onde um device pode ser slave das duas ou slave de uma e master de outra
+
+20. Diferença de transferencias de dados entre beacon e sem beacon.
+
+''
+
+21. O GTP tem que funções
+
+o porposito dele é fazer a ponte entre GSM e internet criando um tunel onde os dados podem passar.
+
+22.O conceito de Packet switching era importante (...)
+skip
+
+23. Vantagens de uso de NFV 
+Melhor escalabilidade melhotr flexibilidade melhor segurança em termos de reperao monotorização reparo e recolocação , melhor portabilidade,efeciencia, custo, etc
+
+24. Qual são os criterios usaria para escolher uma comunicação de baixa velocidade
+ 
+ custo energia , escalabilidade interoperabilidade segurança
+
+25.Que vantagens existem no esquema report only num sistema 
+
+A coneccção de apenas unidirecional, logo menor custo de energia , maior segurnaça , menor custo e melhor escalabilidade.
+
+26.Discuta a operação das plataformas de suporte de IoT
+
+Não vale a pena mas é sigfox lora ble
+
+27.Descreva os blocos consistuitens de IMS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

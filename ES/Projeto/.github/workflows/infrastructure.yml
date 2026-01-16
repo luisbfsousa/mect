@@ -1,0 +1,342 @@
+name: Infrastructure Setup
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - setup
+          - restart
+          - destroy
+        default: 'setup'
+
+env:
+  ACTION: ${{ inputs.action || 'setup' }}
+
+jobs:
+  infrastructure:
+    runs-on: [self-hosted, Linux, X64, es-vm-ecommerce]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load Environment Variables
+        run: |
+          if [ -f "${{ github.workspace }}/.env" ]; then
+            echo "Loading environment variables from .env file..."
+            export $(cat ${{ github.workspace }}/.env | grep -v '^#' | xargs)
+            # Export to GITHUB_ENV for subsequent steps
+            cat ${{ github.workspace }}/.env | grep -v '^#' | grep '=' >> $GITHUB_ENV
+            echo "✅ Environment variables loaded"
+          else
+            echo "❌ .env file not found! Please create one from .env.example"
+            exit 1
+          fi
+
+      # ============================================
+      # SETUP NETWORK
+      # ============================================
+      - name: Create Network
+        if: env.ACTION == 'setup' || env.ACTION == 'restart'
+        run: |
+          echo "🌐 Creating Docker network..."
+          docker network create shophub-network 2>/dev/null || echo "Network already exists"
+          docker network inspect shophub-network
+          echo "✅ Network ready"
+
+      # ============================================
+      # SETUP KEYCLOAK
+      # ============================================
+      - name: Generate Keycloak Realm Configuration
+        if: env.ACTION == 'setup' || env.ACTION == 'restart'
+        run: |
+          echo "📝 Generating Keycloak realm configuration..."
+          cd ${{ github.workspace }}
+          ./scripts/generate-realm.sh
+          echo "✅ Realm configuration generated"
+
+      - name: Setup Keycloak
+        if: env.ACTION == 'setup' || env.ACTION == 'restart'
+        run: |
+          echo "🔐 Setting up Keycloak..."
+
+          # Stop existing if restart
+          if [ "${{ env.ACTION }}" == "restart" ]; then
+            echo "Stopping existing Keycloak..."
+            docker stop shophub-keycloak shophub-keycloak-postgres 2>/dev/null || true
+            docker rm shophub-keycloak shophub-keycloak-postgres 2>/dev/null || true
+            docker volume rm shophub-keycloak-data 2>/dev/null || true
+          fi
+
+          # Check if already running
+          if docker ps | grep -q shophub-keycloak; then
+            echo "✅ Keycloak already running"
+            exit 0
+          fi
+
+          # Create volume
+          docker volume create shophub-keycloak-data 2>/dev/null || true
+
+          # Start Keycloak PostgreSQL
+          echo "Starting Keycloak PostgreSQL..."
+          docker run -d \
+            --name shophub-keycloak-postgres \
+            --network shophub-network \
+            -p 5434:5432 \
+            -e POSTGRES_DB=keycloak \
+            -e POSTGRES_USER=keycloak_user \
+            -e POSTGRES_PASSWORD=keycloak_password \
+            -v shophub-keycloak-data:/var/lib/postgresql/data \
+            --restart unless-stopped \
+            postgres:15-alpine
+
+          # Wait for PostgreSQL
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c 'until docker exec shophub-keycloak-postgres pg_isready -U keycloak_user; do sleep 2; done'
+          sleep 5
+
+          # Verify realm export file
+          if [ ! -f "${{ github.workspace }}/realm-export.json" ]; then
+            echo "❌ realm-export.json not found!"
+            exit 1
+          fi
+
+          # Start Keycloak
+          echo "Starting Keycloak..."
+          docker run -d \
+            --name shophub-keycloak \
+            --network shophub-network \
+            -p 8080:8080 \
+            -p 9000:9000 \
+            -e KEYCLOAK_ADMIN=admin \
+            -e KEYCLOAK_ADMIN_PASSWORD=admin \
+            -e KC_DB=postgres \
+            -e KC_DB_URL=jdbc:postgresql://shophub-keycloak-postgres:5432/keycloak \
+            -e KC_DB_USERNAME=keycloak_user \
+            -e KC_DB_PASSWORD=keycloak_password \
+            -e KC_HEALTH_ENABLED=true \
+            -e KC_HOSTNAME_STRICT=false \
+            -e KC_HOSTNAME_STRICT_HTTPS=false \
+            -e KC_HTTP_ENABLED=true \
+            -e KC_PROXY=edge \
+            -e KEYCLOAK_FRONTEND_URL=http://${{ env.DEPLOY_HOST_IP }}:8080 \
+            -v "${{ github.workspace }}/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro" \
+            --restart unless-stopped \
+            quay.io/keycloak/keycloak:25.0.6 start-dev --import-realm
+
+          # Wait for Keycloak
+          echo "Waiting for Keycloak to start..."
+          timeout 120 bash -c 'until curl -sf http://${{ env.DEPLOY_HOST_IP }}:9000/health >/dev/null 2>&1; do sleep 5; done'
+
+          echo "✅ Keycloak started at http://${{ env.DEPLOY_HOST_IP }}:8080"
+
+      # ============================================
+      # CONFIGURE KEYCLOAK REALMS
+      # ============================================
+      - name: Configure Keycloak Realms
+        if: env.ACTION == 'setup' || env.ACTION == 'restart'
+        run: |
+          # Wait a bit for Keycloak to be fully ready
+          sleep 10
+
+          # Authenticate to Keycloak
+          echo "Authenticating to Keycloak..."
+          docker exec shophub-keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+            --server http://localhost:8080 \
+            --realm master \
+            --user admin \
+            --password admin
+
+          # Configure Master Realm - Disable SSL Required
+          echo "Configuring Master realm..."
+          docker exec shophub-keycloak /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=none
+
+          echo " Keycloak realm configured"
+
+      # ============================================
+      # SETUP FLAGSMITH
+      # ============================================
+      - name: Setup Flagsmith
+        if: env.ACTION == 'setup' || env.ACTION == 'restart'
+        run: |
+          echo "🚩 Setting up Flagsmith..."
+
+          # Stop existing if restart
+          if [ "${{ env.ACTION }}" == "restart" ]; then
+            echo "Stopping existing Flagsmith..."
+            docker stop shophub-flagsmith shophub-flagsmith-task-processor shophub-flagsmith-postgres 2>/dev/null || true
+            docker rm shophub-flagsmith shophub-flagsmith-task-processor shophub-flagsmith-postgres 2>/dev/null || true
+          fi
+
+          # Check if already running
+          if docker ps | grep -q shophub-flagsmith; then
+            echo "✅ Flagsmith already running"
+            exit 0
+          fi
+
+          # Create volume
+          docker volume create shophub-flagsmith-data 2>/dev/null || true
+
+          # Start Flagsmith PostgreSQL
+          echo "Starting Flagsmith PostgreSQL..."
+          docker run -d \
+            --name shophub-flagsmith-postgres \
+            --network shophub-network \
+            -p 5433:5432 \
+            -e POSTGRES_DB=flagsmith \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=flagsmith_password \
+            -v shophub-flagsmith-data:/var/lib/postgresql/data \
+            --restart unless-stopped \
+            postgres:15.5-alpine
+
+          # Wait for PostgreSQL
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c 'until docker exec shophub-flagsmith-postgres pg_isready -U postgres -d flagsmith; do sleep 2; done'
+          sleep 5
+
+          # Start Flagsmith
+          echo "Starting Flagsmith..."
+          docker run -d \
+            --name shophub-flagsmith \
+            --network shophub-network \
+            -p 8000:8000 \
+            -e DATABASE_URL=postgresql://postgres:flagsmith_password@shophub-flagsmith-postgres:5432/flagsmith \
+            -e USE_POSTGRES_FOR_ANALYTICS=true \
+            -e ENVIRONMENT=production \
+            -e DJANGO_ALLOWED_HOSTS='*' \
+            -e FLAGSMITH_DOMAIN=localhost:8000 \
+            -e DJANGO_SECRET_KEY=secret \
+            -e TASK_RUN_METHOD=TASK_PROCESSOR \
+            -e PROMETHEUS_ENABLED=true \
+            --restart unless-stopped \
+            docker.flagsmith.com/flagsmith/flagsmith:latest
+
+          # Start Flagsmith Task Processor
+          docker run -d \
+            --name shophub-flagsmith-task-processor \
+            --network shophub-network \
+            -e DATABASE_URL=postgresql://postgres:flagsmith_password@shophub-flagsmith-postgres:5432/flagsmith \
+            -e USE_POSTGRES_FOR_ANALYTICS=true \
+            -e DJANGO_ALLOWED_HOSTS='*' \
+            -e PROMETHEUS_ENABLED=true \
+            --restart unless-stopped \
+            docker.flagsmith.com/flagsmith/flagsmith:latest \
+            run-task-processor
+
+          # Wait for Flagsmith
+          echo "Waiting for Flagsmith to start..."
+          timeout 240 bash -c 'until curl -sf http://${{ env.DEPLOY_HOST_IP }}:8000 >/dev/null 2>&1; do sleep 5; done'
+
+          echo "✅ Flagsmith started at http://${{ env.DEPLOY_HOST_IP }}:8000"
+
+      # ============================================
+      # SETUP OLLAMA
+      # ============================================
+      - name: Setup Ollama
+        if: env.ACTION == 'setup' || env.ACTION == 'restart'
+        run: |
+          echo "🤖 Setting up Ollama..."
+
+          # Stop existing if restart
+          if [ "${{ inputs.action }}" == "restart" ]; then
+            echo "Stopping existing Ollama..."
+            docker stop shophub-ollama 2>/dev/null || true
+            docker rm shophub-ollama 2>/dev/null || true
+          fi
+
+          # Check if already running
+          if docker ps | grep -q shophub-ollama; then
+            echo "✅ Ollama already running"
+            # Check model
+            if docker exec shophub-ollama ollama list | grep -q "gemma3:1b"; then
+              echo "✅ Model already available"
+              exit 0
+            fi
+          else
+            # Create volume
+            docker volume create shophub-ollama-models 2>/dev/null || true
+
+            # Start Ollama
+            echo "Starting Ollama..."
+            docker run -d \
+              --name shophub-ollama \
+              --network shophub-network \
+              -p 11434:11434 \
+              -v shophub-ollama-models:/root/.ollama \
+              --restart unless-stopped \
+              ollama/ollama:latest
+
+            # Wait for Ollama
+            echo "Waiting for Ollama to start..."
+            timeout 60 bash -c 'until docker exec shophub-ollama ollama list >/dev/null 2>&1; do sleep 3; done'
+          fi
+
+          # Pull model
+          echo "Pulling gemma3:1b model (this may take a few minutes)..."
+          docker exec shophub-ollama ollama pull gemma3:1b
+
+          # Verify
+          if docker exec shophub-ollama ollama list | grep -q "gemma3:1b"; then
+            echo "✅ Ollama ready with gemma3:1b model"
+          else
+            echo "❌ Failed to pull model"
+            exit 1
+          fi
+
+      # ============================================
+      # DESTROY INFRASTRUCTURE
+      # ============================================
+      - name: Destroy Infrastructure
+        if: env.ACTION == 'destroy'
+        run: |
+          echo "🗑️  Destroying infrastructure..."
+          echo "⚠️  This will remove Keycloak, Flagsmith, and Ollama"
+
+          # Stop and remove containers
+          docker stop shophub-keycloak shophub-keycloak-postgres 2>/dev/null || true
+          docker stop shophub-flagsmith shophub-flagsmith-task-processor shophub-flagsmith-postgres 2>/dev/null || true
+          docker stop shophub-ollama 2>/dev/null || true
+
+          docker rm shophub-keycloak shophub-keycloak-postgres 2>/dev/null || true
+          docker rm shophub-flagsmith shophub-flagsmith-task-processor shophub-flagsmith-postgres 2>/dev/null || true
+          docker rm shophub-ollama 2>/dev/null || true
+
+          # Note: Volumes are preserved for data safety
+          echo "ℹ️  Data volumes preserved:"
+          echo "  - shophub-keycloak-data"
+          echo "  - shophub-flagsmith-data"
+          echo "  - shophub-ollama-models"
+          echo ""
+          echo "To delete volumes: docker volume rm shophub-keycloak-data shophub-flagsmith-data shophub-ollama-models"
+
+          echo "✅ Infrastructure destroyed"
+
+      # ============================================
+      # SUMMARY
+      # ============================================
+      - name: Infrastructure Summary
+        if: env.ACTION != 'destroy'
+        run: |
+          echo "=================================="
+          echo "✅ INFRASTRUCTURE READY"
+          echo "=================================="
+          echo ""
+          echo "🔐 Keycloak:  http://${{ env.DEPLOY_HOST_IP }}:8080"
+          echo "   Admin:     admin / admin"
+          echo ""
+          echo "🚩 Flagsmith: http://${{ env.DEPLOY_HOST_IP }}:8000"
+          echo ""
+          echo "🤖 Ollama:    http://${{ env.DEPLOY_HOST_IP }}:11434"
+          echo "   Model:     gemma3:1b"
+          echo ""
+          echo "🌐 Network:   shophub-network"
+          echo ""
+          echo "=================================="
+          echo "Next: Run application deployment workflow"
+          echo "=================================="

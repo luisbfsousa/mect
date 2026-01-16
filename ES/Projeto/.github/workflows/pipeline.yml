@@ -1,0 +1,145 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Force deploy even on PR'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+
+  infrastructure:
+    name: Infrastructure Setup
+    uses: ./.github/workflows/infrastructure.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: write
+  # ============================================
+  # BUILD STAGE - Always runs
+  # ============================================
+  build:
+    name: Build Images
+    needs: [infrastructure]
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: write
+
+  # ============================================
+  # TEST STAGE - Always runs
+  # ============================================
+
+  # ============================================
+  # DEPLOY STAGE - Only on master push
+  # ============================================
+  deploy:
+    name: Deploy to Production
+    needs: [infrastructure, build]
+    # Only deploy on:
+    # 1. Push to master (not PR)
+    # 2. Manual workflow dispatch with deploy=true
+
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy == true)
+    uses: ./.github/workflows/deploy.yml
+    with:
+      backend_image: ${{ needs.build.outputs.backend_image }}
+      frontend_image: ${{ needs.build.outputs.frontend_image }}
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: read
+
+  # ============================================
+  # VERIFY STAGE - After deploy
+  # ============================================
+  verify:
+    name: Verify Deployment
+    needs: [deploy]
+    if: success()
+    runs-on: [self-hosted, Linux, X64, es-vm-ecommerce]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load Environment Variables
+        run: |
+          if [ -f "${{ github.workspace }}/.env" ]; then
+            echo "Loading environment variables from .env file..."
+            export $(cat ${{ github.workspace }}/.env | grep -v '^#' | xargs)
+            # Export to GITHUB_ENV for subsequent steps
+            cat ${{ github.workspace }}/.env | grep -v '^#' | grep '=' >> $GITHUB_ENV
+            echo "✅ Environment variables loaded"
+          else
+            echo "❌ .env file not found! Please create one from .env.example"
+            exit 1
+          fi
+
+      - name: Smoke Tests
+        run: |
+          echo "🧪 Running smoke tests..."
+
+          # Test Frontend
+          FRONTEND_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ env.DEPLOY_HOST_IP }})
+          if [ "$FRONTEND_CODE" != "200" ]; then
+            echo "❌ Frontend health check failed (HTTP $FRONTEND_CODE)"
+            exit 1
+          fi
+          echo "✅ Frontend: OK"
+
+          # Test Backend API
+          BACKEND_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ env.DEPLOY_HOST_IP }}/api/actuator/health)
+          # Accept 200 (OK) or 401 (Unauthorized - endpoint exists but needs auth)
+          if [ "$BACKEND_CODE" != "200" ] && [ "$BACKEND_CODE" != "401" ]; then
+            echo "❌ Backend health check failed (HTTP $BACKEND_CODE)"
+            exit 1
+          fi
+          echo "✅ Backend: OK (HTTP $BACKEND_CODE)"
+
+          # Test Keycloak
+          KEYCLOAK_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ env.DEPLOY_HOST_IP }}:8080/realms/ShopHub)
+          if [ "$KEYCLOAK_CODE" != "200" ]; then
+            echo "⚠️  Keycloak check failed (HTTP $KEYCLOAK_CODE)"
+          else
+            echo "✅ Keycloak: OK"
+          fi
+
+          echo ""
+          echo "✅ Smoke tests passed!"
+
+      - name: Deployment Summary
+        run: |
+          echo "=================================="
+          echo "✅ DEPLOYMENT SUCCESSFUL"
+          echo "=================================="
+          echo ""
+          echo "🌐 Production URLs:"
+          echo "  Frontend:  http://${{ env.DEPLOY_HOST_IP }}"
+          echo "  Backend:   http://${{ env.DEPLOY_HOST_IP }}/api"
+          echo "  Keycloak:  http://${{ env.DEPLOY_HOST_IP }}:8080"
+          echo "  Flagsmith: http://${{ env.DEPLOY_HOST_IP }}:8000"
+          echo ""
+          echo "📦 Deployed Images:"
+          echo "  Backend:  ${{ needs.build.outputs.backend_image }}"
+          echo "  Frontend: ${{ needs.build.outputs.frontend_image }}"
+          echo ""
+          echo "🔍 Commit: ${{ github.sha }}"
+          echo "👤 Author: ${{ github.actor }}"
+          echo ""
+          echo "=================================="

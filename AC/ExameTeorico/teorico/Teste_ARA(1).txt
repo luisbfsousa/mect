@@ -1,0 +1,175 @@
+
+1-O que é um overlay?
+Uma rede overlay é uma rede construída no topo de outra rede. Podemos pensar nos nós na rede overlay como estando conectados através de ligações lógicas ou virtuais, 
+cada uma delas correspondendo a um caminho, que talvez passe por vários links físicos, na rede "abaixo".
+
+2-Quais são as diferenças entre uma CDN e uma rede P2P?
+Uma rede CDN ou P2P têm como propósito a distribuição de conteúdo.
+Enquanto que na rede CDN o conteúdo é espalhado por servidores mais próximos do utilizador, chamados "réplicas", necessitando de um controlo centralizado e uma 
+infraestrutura dedicada, numa rede P2P os utilizadores ("peers") ajudam-se a si próprios, distribuindo conteúdo através de uma árvore de distribuição em que todos os 
+peers são utilizadores e servers ao mesmo tempo. Neste caso, não há necessidade de controlo centralizado ou infraestutura dedicada.
+
+3-O que é o DOCSIS?
+DOCSIS significa Data-Over-Cable Service Interface Specification.
+Trata-se e um standard internacional de telecomunicações que permite a adição de transferência de tráfego digital num sistema CATV existente (utilização de canais de 
+TV).
+A banda disponibilizada é partilhada por todos os utilizadores activos no mesmo canal.
+
+4-Compare o RSVP-TE com o CR-LDP.
+O RSPV-TE e o CR-LDP são duas abordagens emergentes de reserva de recursos e distribuição de labels no MPLS, extensões dos protocolos RSPV e LDP.
+O RSPV-TE adiciona uma label de distribuição e rotas explícitas a um protocolo de reserva de recursos (RSVP).
+O CR-LDP adiciona rotas explícitas e reserva de recursos a um protocolo de distribuição de labels (LDP).~
+Ambos permitem: especificação de rotas para o LSP, escolher as labels de cada link da rota e reservar recursos para o LSP.
+
+
+5-Discute a sua visão das redes públicas, tanto em termos de administração como de arquitetura.
+
+6-Discute 3 atributos BGP de sua escolha.
+AS-PATH (Well-Known Mandatory)
+Quando uma rota passa num AS, o seu número é adicionado a uma lista de AS's. Também usado para prevenção de loops.
+NEXT-HOP (Well-Known Mandatory)
+Indica o next hop.
+Num EBGP indica o endereço da ligação.
+Num IBGP o next hop EBGP é transportado dentro da AS local.
+ORIGIN (Well-Known Mandatory)
+Informa como a rota originou. Pode indicar IGP, EGP ou Incomplete.
+LOCAL PREFERENCE (Well-Known Descritionary)
+Usado para escolher um ponto de saída do AS local.
+ATOMIC AGGREGATOR (Well-Known Descritionary)
+Usado para alertar routers que algumas rotas específicas foram agregadas noutras menos expecíficaas, sendo as mais específicas perdidas.
+COMMUNITY (Optional Transitive)
+Agrega rotas com propriedades comuns.
+AGGREGATOR (Optional Transitive)
+Informa sobre o AS que faz a agregação, fornecendo o IP do router que originou a agregação.
+MULTI-EXIT DESCRIMINATOR (Optional Non-Transitive)
+Usado para sugerir um ponto de entrada no AS.
+WEIGHT (Cisco Only)
+Determina a rota a usar quando existe mais do que uma rota para o mesmo destino.
+
+
+
+7-A estrutura actual da Internet é hierarquica?
+Aparentemente hierárquica porque um Backbone ISP dá acesso a ISP's mais pequenos e consequentemente aos utilizadores. 
+Porém, a estrutura não é respeitada uma vez que existem acordos privados de ligação, em que ISP's se ligam a vários ISP's e utilizadores podem requerer acesso de 
+múltiplos ISP's.
+
+8-Apresente a arquitectura geral de uma rede ADSL.
+A arquitectura geral de uma rede ADSL consiste em 5 componentes: Modem ADSL, que se encontra do lado do cliente e serve para dar acesso à rede; 
+ADSL Termination Unit Central, à qual se ligam todos os modems ADSL e que juntos formam a DSLAM, que se encontra do lado do operador e que consiste na concentração 
+dos dados de múltiplas linhas DSL para ligação à rede do núcleo; BBRAS, que termina ligações para o cliente e para a rede; servidor AAA que desempenha funções de 
+Autenticação, Autorização e Contabilização.
+
+9-Discuta os conceitos da ATM adaptation Layer.
+A AAL é um protocolo de inserção de dados nas células, usado pelo ATM (mecanismo orientado à conexão, baseado na comutação de células de dados que transportam 
+pacotes), que deve encapsular dados de alto nível como voz, vídeo, …
+O AAL está dividido em 2 subcamadas: Convergence Sublayer (CS), que controla o fluxo de dados para e desde o SAR; Segmentation and Reassembly Sublayer (SAR) que 
+converte dados para células no remetente e células para dados no receptor.
+
+10-Discuta o estabelecimento de um LSP em MPLS.
+
+O estabelecimento de um LSP exige um conjunto de passos:
+- Descoberta e seleção de rotas (método basico-passo-a-passo; encaminhamento explicito)
+- Criação de labels (método baseado em tráfego; em resposta a tráfego de controlo)
+- Associação de labels a cada FEC (Forwarding Equivalence Class - identifica um grupo de MPLS que são tratados da mesma forma) ao longo da rota
+- Distribuição de informação sobre a associação label/FEC pelas LSR que fazem parte da LSP a estabelecer
+LSR - Label Switching Router (LSR's no mesmo dominio foram um dominio MPLS através de label forwarding)
+
+11-Identifique os problemas associados a Server Farms e Caching Proxies.
+
+Server Farms e Caching Proxies são soluções utilizadas pelas Content Distribution Networks (CDN), porém, são soluções associadas a alguns problemas.
+Os server farms nada fazem acerca de problemas de congestão de rede ou para melhorar problemas de latência na rede.
+(não tenho a certeza, mas penso que isto deve-se ao facto de haver um servidor centralizado que indica ao cliente a que servidor réplica deve ir buscar a informação)
+Caching proxies servem apenas os seus clientes e não todos os utilizadores da Internet. Providenciadores de conteúdo não podem depender da existência e correcta 
+implementação de Caching Proxies. Estas levam também a problemas na contagem de hits em determinado conteúdo.
+
+12-Compare, em BGP, Route Maps e filtragem. Quando usa um deles preferencilamente ao outro?
+Os BGP Filtering controla os BGP Updates através da route information, path information e as communities.
+
+Route filtering - define-se uma acess-list aplicada aos updates de e para um vizinho
+
+Path filtering - define-se uma acess-list com determinadas condições de entrada e saída
+
+Comunnities - define-se um atributo de community a aplicar ao update de um router
+
+Os route maps são utilizadas para controlar e modificar as informações de routing e 
+definir condições de redistribuiçao de rotas entre dominios de routing
+
+13-Qual a diferença entre um rendezvous peer e um relay peer? 
+Rendezvous Peers são routers que recebem discovery queries e enviam informação dos peers que conhecem na rede.
+Um Relay Peer providencia um mecanismo para os peers comunicarem com outros peers separados da rede (por equipamentos firewall ou NAT).
+
+14-Qual a diferença entre o modo conversativo e o modo liberal, quando falamos de mecanismos de retenção de labels de MPLS?
+Modo conversativo: apenas guarda as labels dos seus next_hops
+Modo liberal: guarda todas as labels
+
+15-O que é um multi homed non transit AS?
+É uma AS que tem 2 (ou mais) routers fronteira e que não permite que o trafego seja tranportado por si. Ou seja apenas pacotes cujo o destino ou origem sejam 
+endereços do próprio AS são permitidos.
+
+16-Porque é que pode QUERER/NÃO QUERER fazer penultimate-hop popping em MPLS?
+QUERER: Reduzir a carga no router fronteira ligado á rede destino, uma vez que tem que fazer apenas um pesquisa em vez de 2
+NÃO QUERER:Em redes pequenas em que o trafego raramente seja demasiado elevado a complexidade da sua implementação pode levar a que a configuração do PHP seja um ponto 
+negativo, pois pode haver erros de configuração e o ultimo router pode estar a espera de um pacote com um label e então ao receber um pacote sem label pode considerar 
+esse pacote com label unkown e portanto descartar esse pacote.
+
+17-Que vantagens e problemas vê no uso de cifragem nas redes P2P?
+Vantagens: 
+- Faz com que seja mais dificil para o ISP dectectar que tecnologia está a ser utilizada (mas tem um limite de banda artificial)
+- Esconde o conteudo do ficheiro para quem estiver à escuta
+- Autentifica os ultilizadores e previne os ataques do tipo 'man in the middle'
+- Ajuda a manter o anonimato
+
+Desvantagens:
+- Dois conteudos com a mesma informação mas cifrados de forma diferente podem ser interpertados como conteudos diferentes
+
+Depende do ponto de vista:
+- Dificulta a censura e a aplicação da lei sobre certos tipos de material
+
+18-Como funciona o routing no Gnutella?
+Para se juntar a uma rede, o cliente tem de conhecer o endereço de pelo menos um nó já pertecente à rede.
+Assim que o cliente tem uma conexão com este nó, pode fazer broadcast a um ping para descobrir o endereço dos outros nós.
+Cada nó mantêm uma ligação com um número de outros nós, normalmente cerca de 5.
+Para procurar na rede por um recurso, o cliente envia uma mensagem "Query" para cada um dos nós a que está ligado.
+Os nós encaminham a mensagem e quando um recurso é encontrado, o nome do recurso e o endereço é propagado de volta pelo caminho.
+O número de nós que são questionados pode ser controlado utilizando um contador Time-To-Live.
+
+19-Descreva a arquitectura PPPoE.
+PPPoE é um serviço que serve para Ligar vários equipamento na rede local sobre a mesma infraestrutura de acesso (CPE) e efectuar controlo de acessos e contabilização 
+de forma semelhante ao efectuado nos acesso Dial-up (Adição do conceito de username/password (login/logoff ) à rede DSL: autenticação, sessão e contabilização).
+Permite o controlo do acesso de uma forma que os utilizadores já conhecem e este controlo e contabilização é feito por utilizador e não por local. Permite também a 
+utilização de Ethernet na LAN e a selecção do ISP a utilizar.
+
+20-Que problemas tem o flooding em termos de pesquisa P2P?
+Pesquisas lentas, e necessita de elevada largura de banda.
+
+21-Em que contexto é que o conceito de ultrapeer aparece?
+Este contexto aparece quando no P2P temos uma estrutura em forma de árvore em que nos nós folhas temos um trafego reduzido, uma vez que apenas funcionam como nós 
+terminais (apenas de recepção ou apenas de envio) e os restantes nós além dessas funcionalidades funcionam tambem como encaminhadores dos pacotes de informação, 
+fazendo com que haja um elevado trafego nesses nós (os chamados ultrapeers).
+
+22-O que é uma célula em comunicações móveis?
+São pacotes com tamanho fixo que contêm informação básica de routing.
+
+23-Qual a diferença entre um VCI (virtual channel identifier) e um VPI (virtual path identifier), na tecnologia ATM?
+O VPI é um identificador que identifica unicamente o caminho para uma rede para a transferencia de pacotetes de celulas em modo assicrono para alcançar o nó destino.
+Os cabeçalhos VPI dizem aos switch's para onde enviar os pacotes. Cada caminho tem um tamanho de banda reservado. O número de caminhos depende da disponibilidade da 
+banda. Cada novo caminho tem um VPI associado.
+
+Um VCI identifica um canal virtual criado num pacote/celula. O VCI tem multiplos circuitos por canal de comunicação e é usado principalmente para a manutenção de 
+identificadores unicos de cada circuito.
+O VCI é usado nas transferencias de celulas ATM. Cada cabeçalho de uma celula ATM tem um VCI, que é um campo de 16-bits, para a identificação logica do canal. Cada VCI 
+funciona com um VPI para facilitar transferecia de pacotes de dados end-to-end. A combinação dos identificadores VCI e VPI garante o transporte correcto de dados.
+
+24-O que é um Multi-Homed Transit AS? 
+É uma AS que tem 2 (ou mais) routers fronteira e que permite que o trafego seja transportado por si.
+
+25-Discuta a Arquitectura da rede CATV.
+Rede mista (híbrida) e unidireccional composta por cabo coaxial e cabo ótico (HFC) para difusão de canais de TV. Evolução natural para infraestrutura bidireccional 
+para o transporte de dados (utilizando DOCSIS).
+Rede HFC é uma rede de distribuição de sinais bidireccionais partilhada; todos os terminais ligados a uma mesma rede recebem todos os sinais, sendo necessários 
+mecanismos de segurança para garantir privacidade.
+
+26-O que é o Generic MPLS encapsulation?
+Método para encapsular pacotes MPLS em pacotes IP, inserindo um campo Label (identifica o nº do label), Exp (3 bits para várias funcionalidades), Stack 
+(1 bit para identificar se é o último label da fila) e Time-To-Live (para impedir loops).
+

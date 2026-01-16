@@ -1,0 +1,59 @@
+Teste 2016
+
+2-
+Statiscal redundacy-
+-data is not uniformely distributed
+-certain patterns and structures in data repeat more frequently than others
+-entropy coding,huffman coding, arithemetic coding
+
+Perceptual redundacy
+-based on the idea that humans perception is less sensitive
+-transform coding , subband codding
+-encode data in a way that reduces the amount of information that is perceived as important by human perecption
+-
+
+In summary, statistical redundancy reduction is based on the idea of reducing the number of bits required to represent the data by taking advantage of the patterns and structures in the data, while perceptual redundancy reduction is based on the idea of removing the information that is not perceived as important by the human perception system while preserving the information that is perceived as important.
+
+---------------------------------------------------
+3-
+simultaneous masking and temporal masking are two phenomena that occur in the human auditory system, where the perception of one sound is affected by the presence of another sound in close proximity in time and frequency, or that precedes or follows it in time. They are used in audio coding by applying psychoacoustic models to the audio signal, which estimate the level of masking for each frequency band, predict the future or past samples of the audio signal and eliminate the redundant information, thus reducing the bitrate required to represent the audio without affecting the perceived quality.
+
+---------------------------------------------------
+5-
+A imagem é dividida em pequenos blocos de 8x8 pixels chamados de unidades de código (CUs).
+
+Cada CU é submetido à uma transformada DCT para remover a redundância espacial e concentrar a maior parte dos dados de informação em uma pequena parte dos coeficientes DCT.
+
+Os coeficientes DCT são quantizados, isto é, divididos por um valor constante para reduzir a precisão dos dados. Os coeficientes menos importantes são arredondados para zero, eliminando-os.
+
+Os coeficientes quantizados são codificados usando um codificador de Huffman para codificar os zeros de maneira mais eficiente.
+
+A imagem codificada é dividida em partes (progresso) e transmitida ou armazenada em uma ordem específica, geralmente começando pelos coeficientes mais significativos.
+
+O processo de decodificação é simplesmente o inverso do processo de codificação, desde a descompactação dos dados usando Huffman até a desquantização e transformada inversa DCT.
+---------------------------------------------------------
+6-
+Os quadros do tipo I (também conhecidos como quadros I ou quadros independentes) são a estrutura básica de compressão de vídeo usada na norma MPEG-1. Eles são codificados de forma independente e não dependem de quadros anteriores ou posteriores para serem decodificados.
+
+Os quadros I são codificados usando a técnica de codificação inter-quadro, onde a diferença entre um quadro e o quadro anterior é codificada. Essa diferença é chamada de movimento compensado e é codificada usando a técnica DCT (Discrete Cosine Transform).
+
+O processo de codificação de um quadro I inclui as seguintes etapas:
+
+-Dividir a imagem em pequenos blocos (macroblocos) de 8x8 pixels
+-Aplicar uma transformada DCT para cada bloco para remover a redundância espacial
+-Quantizar os coeficientes DCT para reduzir a precisão dos dados
+-Codificar os coeficientes quantizados usando o codificador de Huffman para codificar de forma mais eficiente os zeros
+
+----------------------------------------------------------
+8-A compensação de movimento é uma técnica usada em codificadores de vídeo para reduzir a quantidade de informação a ser codificada e transmitida. Ela funciona comparando o quadro atual com o quadro anterior e codificando apenas as diferenças entre eles.
+
+Ao codificar o vídeo, o encoder identifica as áreas que se movimentam na tela, chamadas de regiões de movimento, e as segue de quadro a quadro. Ele utiliza uma técnica chamada de análise de movimento para encontrar a posição de cada região de movimento no próximo quadro.
+
+As regiões de movimento são codificadas usando a técnica DCT (Discrete Cosine Transform) e quantização, e as diferenças entre a posição no quadro atual e no quadro anterior são codificadas usando um código de movimento. Essas informações são transmitidas junto com o quadro atual.
+
+Na decodificação, o decoder utiliza as informações de movimento para reconstruir as regiões de movimento no quadro atual, usando a posição no quadro anterior. Isso permite recriar o quadro atual sem precisar codificar e transmitir toda a informação do quadro novamente, o que resulta em uma taxa de compressão mais alta.
+
+A compensação de movimento é especialmente eficaz em vídeos com muito movimento, como filmes de ação ou esportes, pois a maioria das informações de vídeo são as variações de posição dos objetos em movimento.
+##########################################################################
+
+							Exame 17-18

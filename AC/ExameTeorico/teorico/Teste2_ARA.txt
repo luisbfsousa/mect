@@ -1,0 +1,6 @@
+1 - Em que medida um sistema de gestão de redes se diferencia de um sistema cliente-servidor?
+2 - O RTSP e o RTCP são protocolos semelhantes, distintos, complementares, competidores... ? Comente.
+3 - O protocolo Q.931 está definido no contexto do H.323. Comente no contexto do ambiente SIP qual o protocolo ou operações protocolares equivalente.
+4 - Como interage a sinalização de chamada telefónica PSTN com a sinalização de chamada VoIP?
+5 - Que diferenças encontra entre o conceito de objectos COPS e SNMP?
+6 - O CMIP tem a mesma estrutura cliente-servidor do SNMP? E quanto aos ambientes de policy-based management, como o COPS?

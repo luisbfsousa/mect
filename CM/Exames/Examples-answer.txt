@@ -1,0 +1,168 @@
+BRIEF ANSWER QUESTIONS
+
+1)
+With the evolution of mobile network generations, why have we started to witness a
+reduction in cell size?
+
+GPT Answer:
+As mobile network generations have evolved, cell size has decreased in order to increase capacity and improve coverage. Each new generation of mobile networks has been designed to support more users and higher data speeds, which has required the use of smaller cells. Additionally, as the demand for mobile data services has grown, the need for more densely packed cell deployments has increased, which also contributes to the reduction in cell size.
+
+2)
+Why are there four address fields in WiFi packet headers?
+
+GPT Answer:
+There are four address fields in the header of WiFi packets, also known as MAC (Media Access Control) header, to support the various types of communication that can occur in a wireless network. These fields are:
+
+1.Source address (SA): The MAC address of the device sending the packet.
+2.Destination address (DA): The MAC address of the device the packet is intended for.
+3.BSSID (Basic Service Set Identifier): The MAC address of the wireless access point (AP) that the packet is associated with.
+4.Transmitter address (TA): The MAC address of the device that sent the packet.
+
+Each of these fields allows the network to properly route and deliver the packet to its intended destination. The BSSID and TA are used in the wireless networks to identify where the packet is coming from and where it is going in the network.
+
+3)
+What kind of issues do you think that the usage of Network Function Virtualization can bring to telecommunications networks?
+
+GPT Answer:
+Network Function Virtualization (NFV) is a technology that allows network functions, such as firewalls, load balancers, and routers, to be implemented as software running on commercial off-the-shelf (COTS) servers, rather than on dedicated hardware appliances. While this can bring many benefits, such as increased flexibility and cost savings, it can also introduce some issues in telecommunications networks:
+
+1. Performance: Virtualized network functions may not perform as well as their hardware counterparts, particularly in high-traffic environments.
+
+2. Interoperability: Virtualized network functions from different vendors may not be compatible with each other, which can make it difficult to mix and match different products.
+
+3. Security: Virtualized network functions may be more vulnerable to hacking and other cyber-attacks than hardware-based solutions.
+
+4. Complexity: Managing and maintaining a virtualized network environment can be more complex than managing a traditional hardware-based one, requiring more specialized skills and knowledge.
+There is the need for management (and orchestration) of the network services: separate from the management of the applications/services themselves.
+
+5. Scalability: Virtualized network functions may not be able to handle the same level of traffic as dedicated hardware.
+
+6. Reliability: virtualized network functions are more dependent on the underlying infrastructure, which can be subject to outages or other issues, making the network functions less reliable.
+
+7. Licensing: Virtualized network functions may come with different licensing models, which can make it more difficult to manage costs and plan for future expansion.
+
+However, these issues can be mitigated by careful planning, design, and management of virtualized network functions.
+
+4)
+What is the purpose of Guaranteed Time Slot in Zigbee?
+
+A guaranteed time slot (GTS) allows a device to operate on the channel within a portion of the superframe, without interferance. 
+A GTS shall only be allocated by the PAN coordinator.
+The PAN coordinator can allocate up to seven GTSs at the same time.
+The PAN coordinator decides whether to allocate GTS based on: Requirements of the GTS request and the current available capacity in the superframe.
+
+GPT Answer:
+In Zigbee, a Guaranteed Time Slot (GTS) is a time period during which a device is guaranteed to be able to transmit and receive data on the network. The purpose of GTS is to provide a way for devices to send and receive data with a high level of reliability and low latency, even in a network with a high level of traffic.
+
+GTS is a feature of Zigbee's time-slotted channel hopping (TSCH) mode, which is a scheme for managing the use of the radio channel in a Zigbee network. In TSCH mode, the network is divided into time slots, and each device is allocated a specific number of time slots in which it can transmit and receive data. The GTS is a subset of these time slots that are reserved for devices that require a higher level of reliability and low latency.
+
+Devices can request a GTS by sending a request to the network's coordinator, which is responsible for allocating GTSs to devices. The coordinator can also revoke a GTS if it is no longer needed.
+
+The use of GTS in Zigbee network allows for a better usage of the available bandwith by allowing devices that need a higher level of reliability to have a specific time to use the network, it also allows for a better coexistence with other wireless technologies that might be operating in the same frequency band.
+
+MEDIUM DETAIL QUESTIONS
+
+1)
+Why is it frequently said that BLE is not Bluetooth?
+
+GPT Answer:
+BLE stands for Bluetooth Low Energy, which is a variation of the Bluetooth wireless technology standard. While BLE and Bluetooth share many similarities, they are optimized for different types of applications and use cases. Therefore, it is frequently said that BLE is not Bluetooth because they have different characteristics, capabilities, and design goals.
+
+One of the main differences between BLE and Bluetooth is in their power consumption. BLE is designed to consume significantly less power than Bluetooth, making it suitable for use in battery-powered devices, such as fitness trackers, smart home devices, and IoT sensors. This is achieved by using a simpler protocol and reducing the amount of data that needs to be transmitted.
+
+The simpler protocol in BLE is called GATT (Generic Attribute Profile) and it allows devices to communicate with each other using a limited set of predefined services and characteristics. This reduces the complexity of the communication and helps to save power.
+
+Another way BLE reduces the amount of data that needs to be transmitted is by using smaller packet sizes. BLE packets are typically only a few bytes in size, whereas classic Bluetooth packets can be several hundred bytes in size. This smaller packet size allows BLE to send and receive data more quickly and efficiently, which further helps to reduce power consumption.
+
+BLE also has a feature called "connection intervals" which is the time between two connection events, this time can be set to be longer for low-power devices, this way the device can be in sleep mode for most of the time.
+
+Another difference between BLE and Bluetooth is in their data transfer rate. BLE has a slower data transfer rate compared to Bluetooth, which is suitable for applications that do not require high data throughput.
+
+2)
+Why are sensors connected to gateways and not directly to the Internet?
+
+GPT Answer:
+Sensors are often connected to gateways rather than directly to the Internet for several reasons:
+
+1. Security: Sensors may not have the capability to provide a high level of security, and connecting them directly to the Internet exposes them to a greater risk of cyber attacks. By connecting them to a gateway, the sensor traffic can be filtered and secured before it is sent to the Internet.
+
+2. Protocol conversion: Sensors may use a different communication protocol than the one used on the Internet. The gateway can perform protocol conversion, allowing the sensor data to be transmitted to the Internet using a more common protocol.
+
+3. Power conservation: Many sensors operate on batteries and have limited power resources, connecting them directly to the internet would consume a lot of energy and reduce their battery life. Gateways can help to reduce the amount of data transmitted and the frequency of transmissions, thus reducing power consumption.
+
+4. Cost: Directly connecting all the sensors to the internet would be a costly affair, gateways act as a bridge between the sensor networks and the internet, thus reducing the cost of connecting the sensors.
+
+5. Network management: A gateway can provide network management functionality, such as device discovery, provisioning, and monitoring, which can be useful for maintaining and troubleshooting a sensor network.
+
+6. Scalability: It is often more feasible to connect a number of sensors to a single gateway than to connect each sensor individually to the Internet. This allows for easier scalability as the number of sensors in a network increases.
+
+7. Latency: Connecting sensors directly to the internet would increase the latency of the data transfer, gateways being closer to the sensor network reduce the latency.
+
+In short, connecting sensors to gateways provides a secure, efficient, and cost-effective way of transmitting sensor data to the Internet, while also providing additional features such as protocol conversion, network management, and power conservation.
+
+3)
+Why was LoRaWAN developed for LoRa? Wasn’t LoRa enough?
+
+GPT Answer:
+LoRaWAN (Long Range Wide Area Network) was developed as a communication protocol for use with the LoRa (Long Range) wireless technology. The main reason for developing LoRaWAN was to provide a standardized way of building and deploying large-scale, low-power, wide-area networks (LPWANs) using LoRa technology.
+
+LoRa alone, while providing long-range and low-power communication, is a proprietary technology and not open to the public. It was developed by Semtech, and while it can be used to build wireless networks, it lacks a standard communication protocol.
+
+LoRaWAN, on the other hand, is an open standard communication protocol that can be used by anyone to build and deploy LPWANs. It provides a common set of rules for devices to communicate with each other and with the network, allowing for easy integration of devices from different manufacturers.
+
+LoRaWAN provides several features such as security, scalability, low-power consumption, and bi-directional communication, making it suitable for IoT applications.
+
+In summary, LoRaWAN was developed to provide a standardized way to build and deploy large-scale, low-power, wide-area networks using LoRa technology. It is an open standard, which allows for easy integration of devices from different manufacturers, making it more accessible and flexible for IoT applications.
+
+LoRa+LoRaWAN it's better because the sensors have a long life-time + the fact that they can be in bad conditions (underground, under cement, places with low access)
+It has the abillity to create private networks and roaming between networks and inside the same network, unlike cellular networks.
+
+Besides all that, LoRaWAN can have a higher coverage, since it has gateways.
+
+DEVELOPMENT QUESTIONS
+
+1)
+Which fundamental aspects would you use to characterize 5G networks?
+
+GPT Answer:
+5G networks are characterized by several fundamental aspects, including:
+
+1. High data rates: 5G networks are designed to support much higher data rates than previous generations of mobile networks. This allows for faster download and upload speeds, as well as more responsive streaming and gaming experiences.
+
+2. Low latency: 5G networks are designed to have significantly lower latency than previous generations of mobile networks. This means that the time it takes for data to travel from a device to the network and back is shorter, resulting in more responsive and interactive applications.
+
+3. High capacity: 5G networks are designed to support more devices and users than previous generations of mobile networks. This allows for denser deployments and greater overall network capacity.
+
+4. Improved coverage: 5G networks are designed to have improved coverage, both indoors and outdoors, compared to previous generations of mobile networks. This can be achieved through the use of small cells, beamforming, and other advanced technologies.
+
+5. Flexibility: 5G networks are designed to be more flexible than previous generations of mobile networks, allowing for the easy deployment of new services and the integration of different types of technologies, such as satellite and Wi-Fi.
+
+6. Network slicing: 5G networks support the concept of network slicing which allows the creation of multiple virtual networks on top of the physical infrastructure, each tailored to specific services or use cases.
+
+7. Security: 5G networks incorporate advanced security features to protect against cyber threats and ensure the privacy of user data.
+
+8. IoT support: 5G networks are designed to support the growing number of IoT devices and the diverse requirements of IoT applications, such as low power consumption, high reliability, and low latency.
+
+2)
+Which could be the reasons to prefer using BLE instead of ZigBee for a sensor network?
+
+GPT Answer:
+There are several reasons why BLE (Bluetooth Low Energy) might be preferred over Zigbee for a sensor network:
+
+1. Power consumption: BLE is designed to consume significantly less power than Zigbee, making it more suitable for battery-powered devices and applications where power conservation is important.
+
+2. Cost: BLE devices are typically less expensive than Zigbee devices, making them more accessible for large-scale deployments.
+
+3. Range: BLE has a shorter range than Zigbee, but it is suitable for most indoor and personal area networks.
+
+4. Interoperability: BLE devices can be easily integrated with other devices and networks that use Bluetooth technology, such as smartphones and laptops, while Zigbee devices are typically limited to Zigbee networks.
+
+5. Development: BLE has a larger and more mature ecosystem, with more developer tools and resources available.
+
+6. Security: BLE incorporates advanced security features to protect against cyber threats and ensure the privacy of user data, which might be more robust than Zigbee's.
+
+7. Latency: BLE has a lower latency than Zigbee, which makes it more suitable for applications that require real-time data transfer.
+
+8. Integration with other technologies: BLE can be integrated with other technologies such as wifi or cellular networks, which allows for more flexibility in the network design.
+
+In short, BLE is a more power-efficient, cost-effective, and versatile technology compared to Zigbee, making it more suitable for certain types of sensor networks and applications.

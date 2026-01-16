@@ -1,0 +1,26 @@
+Pergunta 1: b. There is a threshold on the size of the packets below which the RTS/CTS exchange is not activated
+O pacote ICMP (148 bytes) não foi precedido por RTS/CTS, indicando que está abaixo do threshold configurado.
+
+
+Pergunta 2: Verdadeiro
+Em 802.11, a estação responde ao RTS com um CTS (Clear-to-Send) para dar clearance para transmissão de dados.
+
+
+Pergunta 3: c. An IPsec AH tunnel was initiated by the machine with IP address 11.11.0.2
+O tráfego ISAKMP mostra 11.11.0.2 iniciando negociação com 11.11.0.1. O Authentication Header (AH) é usado no túnel IPsec.
+
+
+Pergunta 4: Verdadeiro
+AH (Authentication Header) fornece autenticação e pode ser usado sozinho ou com ESP (Encryption Service Payload) para criptografia.
+
+
+Pergunta 5: c. The reading and writing permissions of community myrouter0 are restricted to a terminal
+A ACL 10 permite apenas 192.1.1.100, restringindo leitura/escrita da community "myrouter0" a um terminal específico.
+
+
+Pergunta 6: Verdadeiro
+No SNMPv2c, quando um GetRequest-PDU é recebido, a entidade SNMP processa cada variável e gera um Response-PDU.
+
+
+Pergunta 8: a. All flows get the same QoS level
+Todos os flows duram 3 minutos, então todos recebem o mesmo nível de QoS (não há diferenciação baseada em duração).

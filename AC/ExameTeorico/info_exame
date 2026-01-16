@@ -1,0 +1,61 @@
+VTIs
+Overlay networks
+
+
+Client quer X    -> oqq tenho que ativar e como é que relaciono os mecanismos
+		    X não funciona, oqq posso mudar?
+		    
+BGP simples (atributos, preferencia local -> mudar por default com base na rede ou no vizinho) "encaminhamento preferencialmente" mas temos de indicar onde!
+		A local preference é trocada dentro do AS só se muda num sitio
+
+
+Quer encaminhar por determinado sitio (não preferencialmente) "filtragem" -> vou rejeitar as rotas com um determinado critério (bloquear updates)
+
+Condições de preferencia/bloqueio são feitas localmente (qual é o link, qual é o vizinho, next-hop, rede, info que o router sabe)
+
+	Para usar info fora do operador usamos Communities, acordando com outro AS que esse coloca uma tag de comunidade
+
+
+BGP Advanced:
+	Troca info BGP between routers, não esquecendo as familias, address family unicast
+		Malha de vizinhança 
+		Se forem muitos, definir router-reflectors 
+		
+	No projeto temos 3 familias  ipv4, unicast
+	Cisco não suportam Route-Reflectors (L2 VPN VXLAN -> precisam de ser vizinhos)
+	
+	BGP na familia VPN L2 nas pontas 
+		route-reflectors
+	Malha para cada uma das familias -> se for muito complexa usar route-reflectors
+	
+	>>>>
+	Questões sobre projeto (SAI)
+		Cliente que quer encaminhamento proprietario c/ redes privadas: é necessario ativar mpls (com reservas rsvp-te), vrf para familias, bgp na familia de VPN L3/Layered VPNs
+													VRF L2 também (tabela de MACs -> teoricamente, tabela de ARP isolada), tal como tabela L3 isolada
+													EXTRA not much relevant: SR LINUX separa L2 de L3 
+	
+	Além do projeto
+		para ligar à internet tem unicast ipv4 
+		Cenário de datacenter distribuido
+		Clientes com encaminhamento proprietario a ligarem-se à internet
+		BGP que anuncia com duas familias ipv4/6 unicast e a proprietaria
+		
+		
+	Para que é que serve o MPLS só com LDP (encaminhamento rápdio só)
+		MPLS com reservas -> ter mpls te, ospf-te extensions, vrfs might need them, bgp se quisermos anunciar as redes como isoladas
+			Pode não ser necessariamente com VPNs, questão de tuneis e reservas de larguras de banda -> pode ser 
+			
+			
+CDNs:
+	Caracteristicas gerais
+	Gestor de conteudos -> faz os clones e replicações nos diferentes niveis de servers (origem, conteudos p/ distribuição, cache intermedia)
+	Serviço de encaminhento -> propor uma solução generica com DNS ou não
+	
+DiffServ: -> QoS
+	Doubt, not likely ahahah
+	Diferenciação (prioridades) vs Integração (MPLS RSVP-TE)
+	
+SNMP:
+	Saber que é um serviço de monitorização integrado 
+	Sai pouco i guess
+	Serviço de encaminhento com base na carga dos servidores (equipamento) (SNMP) e localização ping (round trip time)

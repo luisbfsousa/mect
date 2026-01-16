@@ -1,0 +1,45 @@
+Pergunta 1: d. There is a threshold on the size of the packets below which the RTS/CTS exchange is not activated
+O frame RTS (802.11) mostra que há um mecanismo de threshold. Pacotes pequenos não usam RTS/CTS para eficiência.
+
+
+Pergunta 2: Verdadeiro
+Em 802.11, uma estação responde a um Probe Request Frame com um Probe Response Frame contendo informações de capacidade, taxas suportadas, etc.
+
+
+Pergunta 4: Verdadeiro
+AH (Authentication Header) fornece autenticação e proteção contra replay. Pode ser usado sozinho ou combinado com ESP para adicionar criptografia.
+
+
+Pergunta 6: Falso
+SNMPv2c usa Community-Based Security Model, não User-Based Security Model. O User-Based Security Model é do SNMPv3.
+
+
+Pergunta 7: Verdadeiro
+SNMPv1 e v2c não suportam definição de privilégios de acesso por variável específica em uma MIB view. Isso só é possível no SNMPv3 com VACM (View-based Access Control Model).
+
+
+Pergunta 8: a. Flows 2 and 3 will use different queues
+Com strict priority configurado: porta 5003 (alta prioridade) usa uma queue, porta 5000 (baixa prioridade) usa outra. Flows 2 e 3 (portas 5001 e 5002) usarão queues diferentes baseadas em suas prioridades.
+
+
+Pergunta 9: c. The flow with better service will be the first one
+WFQ dá melhor serviço ao flow com pacotes menores (64 bytes - porta 5000), que será servido primeiro.
+
+
+Pergunta 10 (imagem 8): c. Best Effort (BE)
+O DSCP field mostra 0x00 (000000), que corresponde a CS0 (Class Selector 0) = Best Effort (padrão).
+
+
+Pergunta 11: Falso
+No DiffServ, classificação e condicionamento são feitos pelos edge routers, não pelos core routers.
+
+
+Pergunta 5: d. This capture depicts a SNMPv3 access with a authNoPriv security level
+O pacote mostra msgVersion: snmpv3 (3), confirmando SNMPv3
+msgAuthenticationParameters: 9999d94af789683acb3204b0 está presente, indicando que autenticação está habilitada
+msgPrivacyParameters: <MISSING> indica que privacidade (criptografia) NÃO está habilitada
+
+Isso corresponde ao nível de segurança authNoPriv do SNMPv3:
+authNoPriv = autenticação SIM, privacidade NÃO
+(vs. authPriv = autenticação SIM, privacidade SIM)
+(vs. noAuthNoPriv = sem autenticação nem privacidade)

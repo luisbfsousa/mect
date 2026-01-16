@@ -1,0 +1,19 @@
+4.
+a)
+VoIP SIP tem clientes e servidores. 
+Os últimos têm as seguintes funções: register, proxy e redirect.
+
+b)
+Quando tens uma chamada dentro da mesma operadora o utilizador que quer fazer a chamada faz um invite para o proxy
+e o proxy que conhece o cliente manda o invite direto.
+Com operadoras externas o cliente que quer fazer chamada manda um invite para o proxy , este reconhece que o DNS que vem na chamada não
+é da sua operadora e por isso pede a esse DNS server o IP da operadora requirida. Com esse IP dá redirect do pacote para o SIP proxy.
+O SIP Proxy de destino é que faz o INVITE para o cliente correto.
+
+c)
+CAGUEI
+
+d)
+O sequence number serve para ordenar os pacotes no destino e detetar perda de pacotes. 
+O timestamp serve para sincronizar múltiplos streams de dado.
+

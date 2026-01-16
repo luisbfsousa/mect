@@ -1,0 +1,327 @@
+package com.shophub.service;
+
+import com.shophub.dto.BlogPostDTO;
+import com.shophub.dto.CreateBlogPostRequest;
+import com.shophub.dto.UpdateBlogPostRequest;
+import com.shophub.exception.ResourceNotFoundException;
+import com.shophub.model.BlogPost;
+import com.shophub.repository.BlogPostRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import org.springframework.data.domain.Sort;
+
+@ExtendWith(MockitoExtension.class)
+class BlogPostServiceTest {
+
+    @Mock
+    private BlogPostRepository blogPostRepository;
+
+    @InjectMocks
+    private BlogPostService blogPostService;
+
+    private BlogPost sampleBlogPost;
+    private CreateBlogPostRequest createRequest;
+    private UpdateBlogPostRequest updateRequest;
+
+    @BeforeEach
+    void setUp() {
+        sampleBlogPost = BlogPost.builder()
+                .blogPostId(1)
+                .title("Test Blog Post")
+                .content("This is a test blog post content")
+                .excerpt("Test excerpt")
+                .slug("test-blog-post")
+                .status("published")
+                .featuredImage("https://example.com/image.jpg")
+                .authorId("author-123")
+                .authorName("Test Author")
+                .categories(Arrays.asList("Technology", "Programming"))
+                .tags(Arrays.asList("java", "spring", "testing"))
+                .viewCount(10)
+                .publishedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        createRequest = CreateBlogPostRequest.builder()
+                .title("New Blog Post")
+                .content("This is new blog post content")
+                .excerpt("New excerpt")
+                .slug("new-blog-post")
+                .status("draft")
+                .featuredImage("https://example.com/new-image.jpg")
+                .categories(Arrays.asList("Technology"))
+                .tags(Arrays.asList("java", "spring"))
+                .build();
+
+        updateRequest = UpdateBlogPostRequest.builder()
+                .title("Updated Blog Post")
+                .content("This is updated blog post content")
+                .status("published")
+                .build();
+    }
+
+    @Test
+    void getAllBlogPosts_ShouldReturnAllPosts() {
+        // Given
+        List<BlogPost> blogPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostRepository.findAll(any(Sort.class))).thenReturn(blogPosts);
+
+        // When
+        List<BlogPostDTO> result = blogPostService.getAllBlogPosts();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Test Blog Post", result.get(0).getTitle());
+        verify(blogPostRepository).findAll(any(Sort.class));
+    }
+
+    @Test
+    void getPublishedBlogPosts_ShouldReturnPublishedPosts() {
+        // Given
+        List<BlogPost> publishedPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostRepository.findByStatusOrderByPublishedAtDesc("published"))
+                .thenReturn(publishedPosts);
+
+        // When
+        List<BlogPostDTO> result = blogPostService.getPublishedBlogPosts();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("published", result.get(0).getStatus());
+        verify(blogPostRepository).findByStatusOrderByPublishedAtDesc("published");
+    }
+
+    @Test
+    void getBlogPostById_ShouldReturnPost_WhenPostExists() {
+        // Given
+        when(blogPostRepository.findById(1)).thenReturn(Optional.of(sampleBlogPost));
+
+        // When
+        BlogPostDTO result = blogPostService.getBlogPostById(1);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("Test Blog Post", result.getTitle());
+        verify(blogPostRepository).findById(1);
+    }
+
+    @Test
+    void getBlogPostById_ShouldThrowException_WhenPostNotFound() {
+        // Given
+        when(blogPostRepository.findById(999)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            blogPostService.getBlogPostById(999);
+        });
+        verify(blogPostRepository).findById(999);
+    }
+
+    @Test
+    void getBlogPostBySlug_ShouldReturnPost_WhenPostExists() {
+        // Given
+        when(blogPostRepository.findBySlug("test-blog-post")).thenReturn(Optional.of(sampleBlogPost));
+
+        // When
+        BlogPostDTO result = blogPostService.getBlogPostBySlug("test-blog-post");
+
+        // Then
+        assertNotNull(result);
+        assertEquals("test-blog-post", result.getSlug());
+        verify(blogPostRepository).findBySlug("test-blog-post");
+    }
+
+    @Test
+    void getBlogPostBySlug_ShouldThrowException_WhenPostNotFound() {
+        // Given
+        when(blogPostRepository.findBySlug("non-existent-slug")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            blogPostService.getBlogPostBySlug("non-existent-slug");
+        });
+    }
+
+    @Test
+    void createBlogPost_ShouldCreatePost_WhenSlugIsUnique() {
+        // Given
+        when(blogPostRepository.existsBySlug("new-blog-post")).thenReturn(false);
+        when(blogPostRepository.save(any(BlogPost.class))).thenReturn(sampleBlogPost);
+
+        // When
+        BlogPostDTO result = blogPostService.createBlogPost(createRequest, "author-123", "Test Author");
+
+        // Then
+        assertNotNull(result);
+        assertEquals("Test Blog Post", result.getTitle());
+        verify(blogPostRepository).existsBySlug("new-blog-post");
+        verify(blogPostRepository).save(any(BlogPost.class));
+    }
+
+    @Test
+    void createBlogPost_ShouldThrowException_WhenSlugExists() {
+        // Given
+        when(blogPostRepository.existsBySlug("new-blog-post")).thenReturn(true);
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            blogPostService.createBlogPost(createRequest, "author-123", "Test Author");
+        });
+        verify(blogPostRepository).existsBySlug("new-blog-post");
+        verify(blogPostRepository, never()).save(any(BlogPost.class));
+    }
+
+    @Test
+    void updateBlogPost_ShouldUpdatePost_WhenPostExists() {
+        // Given
+        when(blogPostRepository.findById(1)).thenReturn(Optional.of(sampleBlogPost));
+        when(blogPostRepository.existsBySlugExcludingId(anyString(), anyInt())).thenReturn(false);
+        when(blogPostRepository.save(any(BlogPost.class))).thenReturn(sampleBlogPost);
+
+        // When
+        BlogPostDTO result = blogPostService.updateBlogPost(1, updateRequest);
+
+        // Then
+        assertNotNull(result);
+        verify(blogPostRepository).findById(1);
+        verify(blogPostRepository).save(any(BlogPost.class));
+    }
+
+    @Test
+    void updateBlogPost_ShouldThrowException_WhenPostNotFound() {
+        // Given
+        when(blogPostRepository.findById(999)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            blogPostService.updateBlogPost(999, updateRequest);
+        });
+    }
+
+    @Test
+    void deleteBlogPost_ShouldDeletePost_WhenPostExists() {
+        // Given
+        when(blogPostRepository.findById(1)).thenReturn(Optional.of(sampleBlogPost));
+
+        // When
+        blogPostService.deleteBlogPost(1);
+
+        // Then
+        verify(blogPostRepository).findById(1);
+        verify(blogPostRepository).delete(sampleBlogPost);
+    }
+
+    @Test
+    void deleteBlogPost_ShouldThrowException_WhenPostNotFound() {
+        // Given
+        when(blogPostRepository.findById(999)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            blogPostService.deleteBlogPost(999);
+        });
+    }
+
+    @Test
+    void incrementViewCount_ShouldIncrementViewCount() {
+        // Given
+        when(blogPostRepository.findById(1)).thenReturn(Optional.of(sampleBlogPost));
+        when(blogPostRepository.save(any(BlogPost.class))).thenReturn(sampleBlogPost);
+
+        // When
+        BlogPostDTO result = blogPostService.incrementViewCount(1);
+
+        // Then
+        assertNotNull(result);
+        verify(blogPostRepository).findById(1);
+        verify(blogPostRepository).save(any(BlogPost.class));
+    }
+
+    @Test
+    void searchBlogPosts_ShouldReturnMatchingPosts() {
+        // Given
+        List<BlogPost> searchResults = Arrays.asList(sampleBlogPost);
+        when(blogPostRepository.searchPublishedPosts("test")).thenReturn(searchResults);
+
+        // When
+        List<BlogPostDTO> result = blogPostService.searchBlogPosts("test");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(blogPostRepository).searchPublishedPosts("test");
+    }
+
+    @Test
+    void getBlogPostsByCategory_ShouldReturnPostsInCategory() {
+        // Given
+        List<BlogPost> categoryPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostRepository.findByCategory("Technology")).thenReturn(categoryPosts);
+
+        // When
+        List<BlogPostDTO> result = blogPostService.getBlogPostsByCategory("Technology");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(blogPostRepository).findByCategory("Technology");
+    }
+
+    @Test
+    void getBlogPostsByTag_ShouldReturnPostsWithTag() {
+        // Given
+        List<BlogPost> tagPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostRepository.findByTag("java")).thenReturn(tagPosts);
+
+        // When
+        List<BlogPostDTO> result = blogPostService.getBlogPostsByTag("java");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(blogPostRepository).findByTag("java");
+    }
+
+    @Test
+    void getBlogPostCountByStatus_ShouldReturnCount() {
+        // Given
+        when(blogPostRepository.countByStatus("published")).thenReturn(5L);
+
+        // When
+        long result = blogPostService.getBlogPostCountByStatus("published");
+
+        // Then
+        assertEquals(5L, result);
+        verify(blogPostRepository).countByStatus("published");
+    }
+
+    @Test
+    void getTotalViewCount_ShouldReturnTotalViews() {
+        // Given
+        when(blogPostRepository.getTotalViewCount()).thenReturn(100L);
+
+        // When
+        Long result = blogPostService.getTotalViewCount();
+
+        // Then
+        assertEquals(100L, result);
+        verify(blogPostRepository).getTotalViewCount();
+    }
+}

@@ -1,0 +1,11 @@
+# Environment files
+.env.local
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+
+# GitHub Actions runner
+actions-runner/

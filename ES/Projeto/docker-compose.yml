@@ -1,0 +1,247 @@
+services:
+  # ============================================
+  # Infrastructure services for local/dev
+  # Backend/frontend images are managed via Terraform; local runtime uses run.sh
+  # ============================================
+  
+  postgres:
+    image: postgres:15-alpine
+    container_name: shophub-postgres
+    environment:
+      POSTGRES_DB: shophub
+      POSTGRES_USER: shophub_user
+      POSTGRES_PASSWORD: shophub_password
+    ports:
+      - "5432:5432" 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - shophub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shophub_user -d shophub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak-postgres:
+    image: postgres:15-alpine
+    container_name: shophub-keycloak-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_user
+      POSTGRES_PASSWORD: keycloak_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    networks:
+      - shophub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak_user -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.6
+    container_name: shophub-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://shophub-keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: keycloak_password
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_PROXY: edge
+      # ✅ Updated for local development
+      KEYCLOAK_FRONTEND_URL: http://localhost:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      keycloak-postgres:
+        condition: service_healthy
+    networks:
+      - shophub-network
+    restart: unless-stopped
+    command:
+      - start-dev
+      - --hostname-strict=false
+      - --http-enabled=true
+      - --import-realm
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  flagsmith-postgres:
+    image: postgres:15.5-alpine
+    container_name: shophub-flagsmith-postgres
+    environment:
+      POSTGRES_DB: flagsmith
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: flagsmith_password
+    volumes:
+      - flagsmith_postgres_data:/var/lib/postgresql/data
+    networks:
+      - shophub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d flagsmith -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  flagsmith:
+    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    container_name: shophub-flagsmith
+    environment:
+      DATABASE_URL: postgresql://postgres:flagsmith_password@shophub-flagsmith-postgres:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: "true"
+      ENVIRONMENT: production
+      DJANGO_ALLOWED_HOSTS: "*"
+      FLAGSMITH_DOMAIN: localhost:8000
+      DJANGO_SECRET_KEY: secret
+      TASK_RUN_METHOD: TASK_PROCESSOR
+      PROMETHEUS_ENABLED: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      flagsmith-postgres:
+        condition: service_healthy
+    networks:
+      - shophub-network
+    restart: unless-stopped
+
+  flagsmith-task-processor:
+    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    container_name: shophub-flagsmith-task-processor
+    environment:
+      DATABASE_URL: postgresql://postgres:flagsmith_password@shophub-flagsmith-postgres:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: "true"
+      DJANGO_ALLOWED_HOSTS: "*"
+      PROMETHEUS_ENABLED: "true"
+    depends_on:
+      flagsmith:
+        condition: service_started
+    networks:
+      - shophub-network
+    restart: unless-stopped
+    command: run-task-processor
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: shophub-ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      # Use host models directory if provided (to reuse already-downloaded models); fallback to named volume
+      - ${OLLAMA_MODELS_DIR:-ollama_models}:/root/.ollama
+    networks:
+      - shophub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # COMMENTED OUT - Managed by Terraform
+  # Backend and Frontend are deployed via Terraform
+  # Use deploy-local.sh script for local deployment
+  # ============================================
+  
+  # backend:
+  #   image: ghcr.io/detiuaveiro/group-project-es2526_203/backend:latest
+  #   container_name: shophub-backend
+  #   environment:
+  #     # Database connection (usando nome do container - interno)
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://shophub-postgres:5432/shophub
+  #     SPRING_DATASOURCE_USERNAME: shophub_user
+  #     SPRING_DATASOURCE_PASSWORD: shophub_password
+  #     # ✅ Keycloak - usa nome do container internamente
+  #     KEYCLOAK_URL: http://shophub-keycloak:8080
+  #     # ✅ Novo: URL público usado nos tokens (mesmo host acessado pelo browser)
+  #     KEYCLOAK_PUBLIC_URL: http://131.163.96.54:8080
+  #     KEYCLOAK_REALM: ShopHub
+  #     # ✅ MUDADO - CORS permite frontend do IP da VM
+  #     CORS_ALLOWED_ORIGINS: http://131.163.96.54:3000
+  #     SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  #     SPRING_JPA_SHOW_SQL: "false"
+  #     # Flagsmith (optional, defaults keep it disabled)
+  #     FLAGSMITH_ENABLED: ${FLAGSMITH_ENABLED:-true}
+  #     FLAGSMITH_ENVIRONMENT_KEY: ${FLAGSMITH_ENVIRONMENT_KEY:-ser.6hpKK94dUc8oaVXGpFZ3cu}
+  #     FLAGSMITH_API_URL: "${FLAGSMITH_API_URL:-http://shophub-flagsmith:8000/api/v1}"
+  #     FLAGSMITH_TIMEOUT: ${FLAGSMITH_TIMEOUT:-5s}
+  #   ports:
+  #     - "5000:5000"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     keycloak:
+  #       condition: service_healthy
+  #   networks:
+  #     - shophub-network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:5000/actuator/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 40s
+
+  # frontend:
+  #   image: ghcr.io/detiuaveiro/group-project-es2526_203/frontend:latest
+  #   container_name: shophub-frontend
+  #   environment:
+  #     # ✅ MUDADO - URLs apontam para o IP da VM
+  #     REACT_APP_KEYCLOAK_URL: http://131.163.96.54:8080
+  #     REACT_APP_KEYCLOAK_REALM: ShopHub
+  #     REACT_APP_KEYCLOAK_CLIENT_ID: shophub-frontend
+  #     REACT_APP_API_URL: http://131.163.96.54:5000/api
+  #     # Flagsmith (optional)
+  #     REACT_APP_FLAGSMITH_ENVIRONMENT_ID: ${REACT_APP_FLAGSMITH_ENVIRONMENT_ID:-}
+  #     REACT_APP_FLAGSMITH_API_URL: "${REACT_APP_FLAGSMITH_API_URL:-http://131.163.96.54:8000/api/v1}"
+  #     REACT_APP_FLAGSMITH_DEFAULT_IDENTITY: ${REACT_APP_FLAGSMITH_DEFAULT_IDENTITY:-}
+  #     REACT_APP_FLAGSMITH_ENABLE_ANALYTICS: ${REACT_APP_FLAGSMITH_ENABLE_ANALYTICS:-false}
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy
+  #   networks:
+  #     - shophub-network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+
+volumes:
+  postgres_data:
+    name: shophub-postgres-data
+  keycloak_postgres_data:
+    name: shophub-keycloak-data
+  flagsmith_postgres_data:
+    name: shophub-flagsmith-data
+  ollama_models:
+    name: shophub-ollama-models
+
+networks:
+  shophub-network:
+    name: shophub-network
+    driver: bridge

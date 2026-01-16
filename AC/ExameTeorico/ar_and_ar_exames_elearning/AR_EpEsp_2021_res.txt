@@ -1,0 +1,29 @@
+1.
+Uma VLAN só é end-to-end se um broadcast chegar a toda a rede, geralmente se chegar 
+ao centro da rede (SWL3 C1 e C2) já é.
+Portanto, V1, V6, V10.
+
+2.
+Temos 2 rotas de omissão por tabela, todas com custo 70.
+Para o C1:
+ISP -> R1 -> RA -> C1
+ISP -> R1 -> RB -> C1 
+Para o C2:
+ISP -> R1 -> RA -> C2
+ISP -> R1 -> RB -> C2
+
+3.
+Como os SWL3 C1 e C2 tem redundância total basta garantir que ambos os routers 
+têm OSPF do mesmo tipo 1 e estabelecer uma métrica igual.
+
+4. (Opcional)
+Com politicas mudamos a ordem de C1 para ser prioritaria em relação a C2.
+
+5.
+Implementar RIP nos SWL3 C1 e C2 (para garantir redundância) e redistribuir pelo OSPF 
+essas redes.
+O core depois disso, anuncia a rota default (por omisão) por RIP.
+
+6.
+Teríamos que abrir 4 túneis IP proveninentes dos SWL3 F1 a F4 para cada Router (A e B), 
+sendo 8 no total. Implementando politicas de encaminhamento de maneira a dividir o tráfego.

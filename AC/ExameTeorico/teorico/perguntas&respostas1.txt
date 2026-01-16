@@ -1,0 +1,390 @@
+ARA - Perguntas de teste 2
+Diogo Daniel Soares Ferreira - 2017/2018
+
+-----------
+RTP/RTCP
+-----------
+
+19. Comente a frase: O RTP tem um conceito “leve” de sessões.
+
+No RTP não existe um controlo explícito de sessões. Quando um terminal deseja receber dados de uma sessão, junta-se à sessão multicast iniciada pelo emissor. Também não existe um controlo explícito nos grupos criados. Tal modelo é adequado para multicast. O emissor sabe aproximadamente quantos terminais RTP existem através dos pacotes RTCP. Esses dados serão utilizados para alterar a frequência de emissão de acordo com o número de recetores.
+
+
+1. Porque é que o RTP tem um campo para timestamp e outro para sequence number?
+
+O sequence number (incrementado por cada pacote enviado) é usado pelo recetor para identificar perdas de pacotes e restaurar a sequência de pacotes.
+O timestamp (incrementado por cada frequência de amostragem) é usado para permitir ao recetor reproduzir as amostras recebidas em intervalos apropriados e sincronizar diferentes fluxos de dados simultâneos.
+
+
+38. O RTP está orientado para 3 tipos de cenários de comunicação, suportando-os por inerência. Enumere-os.
+
+1 - Envio de audio/video de um emissor para vários recetores.
+2 - Envio de audio/video de um emissor após passar num translator e alterar os dados no vídeo (por exemplo, diminuir qualidade do vídeo para enviar menor tráfego para fora do ISP).
+3 - Vários emissores enviam dados para um mixer. O mixer gera um fluxo de dados tendo em conta dos vários fluxos de entrada e envia-o para os recetores.
+
+
+11. Discuta os mecanismos do RTCP que foram definidos com o objetivo de manter o protocolo escalável com o aumento do número de participantes.
+
+O RTCP tenta limitar a largura de banda a 5% da largura de banda da sessão.
+Desses 5%, 25% são reservados para o sender e 75% são reservados para os receivers.
+Assim, dependendo do número de receivers cada um deles terá apenas 75%/N (sendo N o numero de receivers) da largura de banda, mantendo assim a escalabilidade do protocolo.
+Para além disso, os receivers enviam os dados dos pacotes perdidos, delay, jitter e outra informação relevante nos pacotes RTCP, que o emissor pode utilizar para adequar o seu tráfego à transmissão de dados.
+
+
+16. Comente a afirmação: “O RTSP permite interoperar com o protocolo RTP”.
+
+RTSP é um protocolo ao nível aplicacional de controlo de streaming. Utiliza texto como comandos, http-alike. Não especifica protocolo para o seu transporte, nem para transporte dos dados. Mensagens são enviadas fora de banda. Permite envio e receção de mensagens como "Get", para obter o handler do streaming, "play", "pause", "stop", "rewind", ...
+O RTP é um protocolo para transmissão de um fluxo de dados multimédia em tempo-real.
+O RTP pode ser utilizado como protocolo de transferência de dados multimédia, utilizando o RTSP para controlar o seu fluxo ao nível aplicacional.
+
+
+22. Qual a diferença entre o RTCP e o RTSP?
+
+O RTCP é um protocolo de controlo de QoS enquanto que o RTSP que é de streaming.
+O RTCP inclui o numero de pacotes enviados, numero de pacotes perdidos entre outras informações.
+RTSP é um protocolo ao nível aplicacional de controlo de streaming. Utiliza texto como comandos, http-alike. Não especifica protocolo para transporte, nem para transporte dos dados. Mensagens são enviadas fora de banda. Permite envio e receção de mensagens como "Get", para obter o handler do streaming, "play", "pause", "stop", "rewind", ...
+
+
+33. O RTSP e o RTCP são protocolos semelhantes, distintos, complementares, competidores... ? Comente.
+
+RTCP -> Protocolo de controlo do RTP. Multicast. 5% do tráfego RTP. 25% vem dos senders/75% dos receivers.
+Pacotes enviados pelos receivers contêm informação importante, como o atraso, o jitter, o nº de pacotes perdidos.
+O sender recebe esta informação, e também consegue deduzir o número de clientes ativos.
+
+RTSP é um protocolo ao nível aplicacional de controlo de streaming. Utiliza texto como comandos, http-alike. Não especifica protocolo para transporte, nem para transporte dos dados. Mensagens são enviadas fora de banda. Permite envio e receção de mensagens como "Get", para obter o handler do streaming, "play", "pause", "stop", "rewind", ...
+
+
+28. Como é que pode usar o RTCP para garantir QoS nas comunicações?
+
+RTCP -> Protocolo de controlo do RTP. Multicast. 5% do tráfego RTP. 25% vem dos senders/75% dos receivers.
+Pacotes enviados pelos receivers contêm informação importante, como o atraso, o jitter, o nº de pacotes perdidos.
+
+O sender recebe esta informação, e também consegue deduzir o número de clientes ativos.
+Com esta informação, pode adequar o seu fluxo de dados consoante surgem mais utilizadores, e de acordo com os dados recebidos.
+Por exemplo, se todos os senders enviarem reports com muitas perdas, o servidor poderá baixar a frequência de envio de pacotes RTCP.
+
+
+-------
+SIP
+-------
+
+21. Como funciona uma mensagem de INVITE no SIP?
+
+A mensagem INVITE no SIP é utilizada para estabelecer ou alterar os parâmetros de uma sessão.
+
+Contém dados como o endereço do UA destino e emissor, o caminho por onde o pacote passou, ID da chamada e a descrição da sessão a ser iniciada, utilizando SDP - Session Description Protocol.
+
+Inicialmente, ambos os UA precisam de se registar num servidor Register.
+
+O Gateway A envia uma mensagem request INVITE para o servidor, que responde com um 100 Trying ao Gateway A e encaminha o INVITE para o Gateway B. Quando o Invite atinge o destino, é reciprocado com um 180 Ringing (até lá, os servidores intermédios enviaram mensagens Trying para o gateway A). Quando o Gateway A recebe o 180 Ringing seguido de um 200 OK, responde com um ACK e procede-se à sessão de comunicação.
+
+
+40. Como funciona a mensagem REDIRECT no SIP?
+
+Retorna localizações alternativas de User Agents e servidores.
+
+1. Recebe Requests
+2. Consulta a base de dados para obter a localização do cliente
+3. Retorna a lista de endereços alternativos para onde os pedidos devem ser redirecionados
+
+
+2. Para que serve o registrar?
+
+Um registrar é um SIP endpoint que aceita pedidos do tipo REGISTER e coloca essa informação no servidor que gere esse domínio.
+
+
+30. O que é um user agent no SIP? Que tipos de agents conhece?
+
+Um user agent é um agente lógico de um cliente utilizado para comunicar com outros clientes.
+Existem dois tipos de user agents: Client e Server.
+Um user agent client é utilizado quando é necessário enviar SIP requests para outro cliente. O outro cliente irá responder utilizando o UA server, que será utilizado para enviar SIP responses aos clientes.
+
+--------
+H.323
+--------
+
+13. Que diferenças encontra entre a sinalização de chamada baseada em SIP e baseada em H.323?  
+
+SIP requer respostas baseadas em texto (HTTP-alike).
+H.323 utiliza código ASN.1 baseado em regras específicas.
+
+SIP define um set mínimo e usa perfis e extensões.
+H.323 define extensivamente as funções, através de sub-protocolos (H.242, H.245,..)
+
+SIP utiliza proxy, redirect e registrar servers.
+H.323 utiliza gateways para controlar o tráfego H.323 numa zona e inter-zonas.
+
+
+29. Do seu ponto de vista, como é que o SIP e o H.323 diferem na inclusão de novos codecs?
+
+O SIP é um protocolo flexível, sendo que apenas define a sinalização e não define o tipo de transporte de dados, sendo possível utilizar diferentes protocolos para transporte de dados.
+
+O H.323 é feito de sub-protocolos, sendo que todos se encontram normalizados, e são bastante rígidos.
+Portanto, seria mais fácil inserir novos codecs no SIP do que no H.323.
+
+
+34. O protocolo Q.931 está definido no contexto do H.323. Comente no contexto do ambiente SIP qual o protocolo ou operações protocolares equivalente.
+
+Q.931 é o protocolo utilizado para estabelecer, controlar e terminar ligações entre dois endpoints. No SIP, o equivalente seriam os comandos: Invite (setup); trying(call proceding); ringing(alerting); OK(connect); bye(disconnect).
+
+
+20. Para que serve um gatekeeper? 
+
+Em H.323, um gatekeeper é o ponto principal de gestão de uma rede. Tem várias funções:
+-> Tradução de endereços do IP/Telefone
+-> Controlo de acesso à rede nos terminais
+-> Gestão da banda larga utilizada
+-> Gestão de chamadas
+
+Para estabelecer chamadas numa rede, o gatekeeper não é obrigatório. No entanto, para efetuar e receber mensagens com o exterior o gatekeeper é obrigatório.
+Os endpoints necessitam de estar registados no gatekeeper. O gatekeeper também efetua routing da sinalização de chamadas.
+
+
+39. Para que serve o MCU do H.323?
+O MCU, no H.323 é utilizado para estabelecer comunicações multiponto, ou seja, comunicações com mais do que dois endpoints (por exemplo, para salas de conferência virtuais).
+
+O MCU é composto por duas partes:
+Multipoint controller - Controla a sinalização da chamada
+Multipoint processor - Controla o fluxo de dados da chamada
+
+Se apenas estiver a ser utilizado o MC numa sessão, a chamada é descentralizada, caso contrário, a chamada diz-se centralizada.
+
+
+--------
+Interconnecting two networks
+--------
+
+45. O MEGACO faz parte da estrutura do SIP? Como se diferencia deste?
+
+SIP é um protocolo de sinalização sobre pacotes IP. Megaco não faz parte da estrutura do SIP, porque é um protocolo de controlo de gateways multimédia.
+
+Assim sendo, para interligar uma rede VoIP com uma rede PSTN (interligação de rede packet-switched com circuit-switched) são necessários três componentes principais:
+- Media gateways - gateways para tradução dos dados entre as duas redes
+- Signaling gateways - Gateways para tradução da sinalização entre as duas redes
+- Media gateway controller/call agent/softswitch - De acordo com a sinalização recebida do signaling gateway, controla os media gateways.
+
+Megaco e o MGCP são dois protocols que permitem interligar os media gateway controllers e os media gateways.
+
+
+3. Que função(ões) tem um softswitch? 
+
+É um dispositivo software-based numa rede de telecomunicações que providencia a gestão de tráfego de vídeo, data, fax e voz; encaminhamento de uma chamada dentro da rede e pode processar a sinalização para todos os tipos de protocolos de pacotes.
+É usualmente usado para controlar ligações na junção dos pontos entre redes circuit-switched e packet-switched.
+A tecnologia moderna levou a que fosse preferencialmente decomposta em Call Agents (Media Gateway Controller) e Media Gateway.
+
+
+14. Em abstrato, que tipo de serviços de interligação entre a rede IP e a rede telefónica consegue sugerir? Dê um exemplo comercial de cada um deles.
+
+Em casos simples, para interligação entre SIP e PSTN, pode ser utilizada uma Gateway SIP/PSTN para interligar as duas redes. O gateway irá traduzir os dados e a sinalização, mantendo duas tabelas de routing, uma para cada rede. Por exemplo, para enviar o utilizar o SIP entre empresas, onde a ligação entre elas é efetuada por uma rede PSTN.
+
+Em cenários reais, maior escalabilidade é necessária. Para isso, podem ser usados os protocolor MGCP ou Megaco (sucessor de MGCP), que utilizam:
+Signaling gateway, que efetua a sinalização da rede PSTN e IP, ligado a um call agent, que irá comunicar com o media gateway, que fará a tradução dos dados entre a rede comutada e a rede por pacotes. Os protocolos são usados na comunicação entre os media gateways e os MGC (call agents). Por exemplo, operadores de telecomunicações.
+
+
+35. Como interage a sinalização de chamada telefónica PSTN com a sinalização de chamada VoIP?
+
+Para efetuar a interoperação é possível utilizar um gateway VoIP/PSTN, que fará a tradução de sinalização e dados.
+
+No entanto, para sistemas escaláveis, por exemplo do ponto de vista de uma operadora, é necessário existir interoperação distribuída por vários pontos. Para isso, é necessário um Media Gateway que fará a tradução de dados do PSTN para a rede VoIP.
+
+Para a tradução de sinalização, é necessário um signaling gateway e um call agent (media gateway controller), que irá controlar o Media Gateway de acordo com a sinalização recebida. Poderoa também ser usado um softswitch para efetuar a tradução entre as redes circuit-switched e packet-switched, mas deverá ser dividido em call agents/Media gateway nas arquiteturas modernas.
+
+
+-------
+GSM
+-------
+
+41. O que é uma célula em comunicações móveis?
+
+Entidade física mais pequena que permite o acesso a entidades móveis.
+Associado com o mecanismo físico de transferência de informação, orientado ao terminal ou definido por uma base station.
+
+Vantagens:
+- power
++ robustez
++ utilizadores ao mesmo tempo
++ capacidade
+
+Desvantagens:
+Células necessitam de estar ligadas através de rede cablada
+Interferência entre células adjacentes
+Demasiados handovers
+
+
+10. Como se caracterizavam os primeiros sistemas de telefonia celular (1G)?
+
+Os primeiros sistemas de telefonia celular (1G) eram sistemas analógicos, uma vez que enviavam informação sobre a forma de ondas. Apenas podiam ser usados para comunicação por voz e tinham uma qualidade de ligação variável. Eram bastante inseguros, uma vez que facilmente se podia escutar conversas.
+
+2G -> digital; necessidade de ter um maior número de ligações simultâneas; integração de um serviço de mensagens(SMS)
+2.5G -> velocidades superiores
+3G -> telefonia por voz e transmissão de dados a uma longa distância, num ambiente móvel; incorporam redes de acesso à internet. 
+
+
+26. Descreva esquematicamente a arquitectura GSM.
+
+BTS - Base tranceiver station - Controla a interface rádio que comunica com os MT. Cifra e decifra as comunicações.
+BSC - Base station controller - Contêm vários BTS. Controla a alocação e a desalocação de canais para MT.
+MSC - Mobile switching center - Centro de comunicações que tem ligado todas as BS's (BTS+BSC). Efetua o processamento e switching de todas as chamadas, bem como o accounting. Liga-se a outras MSC, e também a GMSC para chamadas para redes PTSN.
+GMSC - Gateway mobile switching center - Gateway do GSM para outras redes PTSN.
+EIR - Equipment identity register - Contém informação identificadora de cada equipamento móvel. Tem 3 listas conceptuais: Lista branca (todos os IMEIs estão habilitados a usar o sistema); Lista cinzenta (IMEIs de MSs que possuem algum tipo de problema); Lista negra (IMEIs de MSs que não estão habilitados a usar o sistema e.g. roubados).
+HLR - Home location register - Contém informação permanente e semi-permanente sobre os subscritores pertencentes à rede GSM local. Sabe em que área os MSs estão.
+VLR - Visitor location register - Contém informação temporária, que é uma cópia dos principais dados de um subscritor, de todos os MSs que estão atualmente ligados à rede naquela zona.
+AuC - Authentication register - Contém uma base de dados com as chaves criptográficas de cada MSs para efetuar a autenticação de subscritores.
+
+
+6. Nomeie as quatro bases de dados que fazem inerentemente parte da arquitectura GSM.
+
+EIR - Equipment identity register - Contém informação identificadora de cada equipamento móvel. Tem 3 listas conceptuais: Lista branca (todos os IMEIs estão habilitados a usar o sistema); Lista cinzenta (IMEIs de MSs que possuem algum tipo de problema); Lista negra (IMEIs de MSs que não estão habilitados a usar o sistema e.g. roubados).
+HLR - Home location register - Contém informação permanente e semi-permanente sobre os subscritores pertencentes à rede GSM local. Sabe em que área os MSs estão.
+VLR - Visitor location register - Contém informação temporária, que é uma cópia dos principais dados de um subscritor, de todos os MSs que estão atualmente ligados à rede naquela zona.
+AuC - Authentication register - Contém uma base de dados com as chaves criptográficas de cada MSs para efetuar a autenticação de subscritores.
+
+
+4. O que é um canal half-rate em GSM?
+
+Um canal half-rate é um serviço que permite ter 2 utilizadores numa mesma estrutura TDMA, alternando frames num mesmo timeslot.
+
+
+15. Discuta a utilidade do conceito de canais lógicos nas redes móveis.
+
+Os canais físicos referem-se aos timeframes que existem nas várias frequências, que podem ser utilizados para transportar canais lógicos.
+
+Canais lógicos são mapeados nos timeframes dos canais físicos e servem para estabelecer uma comunicação entre o MN e a BS. Existem 2 data channels (TCH - full rate traffic channel e TCH/H - half rate traffic channel), que servem para enviar dados.
+
+Existem signaling channels, que são utilizados para outros fins:
+- Broadcast channels são canais point-to-multipoint que descrevem parâmetros da comunicação dos BSS;
+- Common Control Channels são canais comuns utilizados por todas as entidades para efetuar pedidos para requisitar um canal, ou fazer paging a um MN.
+- Dedicated/associated Control channels são canais específicos ponto-a-ponto para efetuar a sinalização necessária para uma chamada (call setup, registration, ...).
+
+
+-------
+GPRS
+-------
+
+5. O que é um GPRS attach?
+
+Para se registar numa rede GPRS, um utilizador faz um GPRS attach, activando de seguida um contexto PDP.
+
+O PDP context request é enviado para o SGSN, que é depois enviado para o GGSN. O GGSN responde com um PDP context response, que o SGSN irá receber e enviar ao MT um PDP context accept. O GGSN e o SGSN irão assim alocar um contexto PDP para o MN.
+
+Quando quer deixar a rede, faz um GPRS dettach.
+
+
+--------
+Mobile IP
+--------
+
+7. Porque é que aparece o problema de triangular routing?
+
+Quando um mobile terminal se regista numa nova rede, efetua o registo na sua rede local. Depois, o seu home agent irá manter um túnel com o foreign agent (caso exista) para enviar todos os pacotes que têm como destino o mobile terminal.
+
+Quando o MT responde aos pacotes, envia-os diretamente para o CH (communications host). Como a comunicação nas duas direções segue rotas diferentes, temos o problema de "triangular routing".
+envio de pacotes:
+CH ----> HA -----> MH
+MH ---------------> CH
+Especialmente quando o HA está a muitos hops de distância, é pouco eficiente.
+
+
+23. O que é um soft-handover?
+
+Make-before-break approach.
+Há simultaneamente acesso aos dois AP's.
+Antes de terminar a conexão antiga, a nova é estabelecida.
+
+
+43. Porque é que existem 2 agentes de mobilidade numa rede móvel (o local e o remoto)?
+
+O local identifica que o terminal não está na rede local e informa a nova posição ou redireciona o tráfego para a nova posição.
+O remote identifica que um novo terminal chegou à rede e encaminha tráfego para esse terminal.
+
+
+44. Em que direre o uso de MIP com e sem foreign agent.
+
+Com FA:
+Mobile node obtêm endereço através de FA.
+Regista-se no FA. O FA efetua o registo no Home agent.
+Home agent cria túnel para o FA.
+
+Sem FA:
+Mobile node obtêm endereço através de DHCP.
+Regista-se diretamente no home agent.
+Home agent cria túnel diretamente para o mobile node.
+
+
+-------
+Gestão
+-------
+
+9. Há cinco modelos estratégicos de gestão, sendo o mais básico a gestão anárquica. Que outros modelos conhece?
+
+Reactive, Proactive, Service-Oriented e Business Increase
+
+
+32. Em que medida um sistema de gestão de redes se diferencia de um sistema cliente-servidor?
+
+No modelo cliente-servidor, existe apenas um servidor e diversos clientes efetuam pedidos ao servidor.
+No sistema de gestão de redes, existe o modelo gestor-agente. Neste caso, existe apenas um gestor que comunica com diversos clientes, que lhe respondem aos pedidos.
+Podem também existir os modelos distribuídos e hierárquico.
+
+
+18. Apresente razões que possam explicar uma preferência por uma estratégia de gestão que  seja considerada anárquica. 
+
+Gestão anárquica pode ser utilizada para garantir que não existem preferências no tráfego encaminhado entre redes, ou para garantir que todos os utilizadores recebem indeferenciadamente o mesmo tratamento.
+
+
+17. O modelo funcional FCAPS é usado em Gestão. Em que áreas se encontra dividido?
+
+Fault - Deteção, isolamento e correção de comportamentos anómalos numa rede
+Configuration - Controlo dos elementos de rede para que eles executem as suas funções como esperado
+Accounting - Medição do tráfego gerado por utilizadores para permitir a contabilidade e o taxamento de dados
+Performance - Avaliar a eficiência da rede e a sua velocidade
+Security - Comunicações seguras dentro da rede
+
+
+24. Quais as funções de um produtor de políticas?
+
+Um produtor de políticas cria as políticas a aplicar à rede e posteriormente armazena-as num repositório de políticas, para serem utilizadas pelos consumidores de políticas.
+
+
+8. Quais as funções de um consumidor de politicas? 
+
+Um consumidor de políticas acede ao repositório de políticas para transferir as políticas armazenadas.
+Depois, utilizando modelo de outsorcing ou configuração, envia regras para os PEP, baseadas nas políticas armazenadas.
+
+
+36. Que diferenças encontra entre o conceito de objectos COPS e SNMP?
+
+SNMP:
+Manager/agent -> 1 manager com muitos agents.
+O manager contêm a inteligência e conhece os objetos (MIBs) dos agentes. Pode efetuar configurações nos agentes, e obter informação por pooling. Também é possível configurar os agentes para enviarem Reports para os managers (traps) quando um evento acontece.
+
+COPS:
+Protocolo de pergunta/resposta
+Mantem a sincronização dos estados (Recupera de perdas e mantem os estados com keep-alive)
+Suporta 2 tipos de clientes: RSVP(modelo outsourcing) e Diff-serv(configuration model)
+O PDP vai buscar as políticas ao repositório de políticas e, com base nessas políticas, envia regras para os PEP's, de acordo com o modelo adotado.
+
+EXTRA: CMIP
+No protocolo CMIP, existem objetos hierárquicos definidos na especificação. O protocolo não é orientado a pooling, o que facilita a sua escalabilidade, e a definição dos objetos é orientada à especificação, e não orientada à implementação, o que permite uma maior abstração por parte das regras enviadas pelo PDP.
+
+
+12. Compare as diferenças conceptuais entre o CMIS e o CMIP.
+
+CMIP é o protocolo OSI especificado para gestão de redes. (OSI - Open Sistems Interconnection)
+CMIS descreve as funcionalidades de gestão implementadas pelo CMIP.
+
+
+37. O CMIP tem a mesma estrutura cliente-servidor do SNMP? E quanto aos ambientes de policy-based management, como o COPS?
+
+O CMIP possui uma especificação aquitetónica com várias camadas, sendo que na camada do modelo de dados apresenta um protocolo hierárquico orientado a objetos.
+O COPS utiliza estações geradoras de políticas para gerar políticas de alto nível, que são posteriormente armazenadas num repositório de políticas. Os consumidores de políticas, PDP, irão utilizar essas políticas para enviar regras para os vários PEP, de acordo com o seu modelo de configuração (outsorcing ou configuration model).
+
+
+46. O modelo TMN é usado em gestão. Em que camadas se encontra dividido?
+
+BML - Business Management Layer
+SML - Service Management Layer
+NML - Network Management Layer
+EML - Element Management Layer
+NEL - Network Element Layer
+

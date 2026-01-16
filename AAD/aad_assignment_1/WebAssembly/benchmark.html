@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>DETI Coin WASM (Student)</title>
+	<style>
+		body{ 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+        }
+
+		h1{ 
+            margin-top:0; 
+        }
+
+		fieldset{ 
+            border:1px solid #bbb; 
+            padding:10px 14px; 
+            max-width:650px; 
+        }
+
+		legend{ 
+            font-weight:bold; 
+        }
+
+		label{ 
+            display:block; 
+            margin-top:8px; 
+        }
+
+		input[type=number],input[type=text]{ 
+            padding:4px; 
+        }
+
+		button{ 
+            margin-top:10px; 
+            padding:6px 12px; 
+        }
+
+		#log{ 
+            white-space:pre-wrap; 
+            background:#f4f4f4; 
+            border:1px solid #ccc; 
+            padding:10px; 
+            margin-top:16px; 
+            min-height:120px; 
+            font-size:13px; 
+            max-width:650px; 
+        }
+
+		.coin{ 
+            font-family:monospace; 
+            white-space:pre; 
+            background:#fff; 
+            border:1px solid #ddd; 
+            padding:6px 8px; 
+            margin-top:6px; 
+            display:inline-block; 
+        }
+
+		small{ 
+            color:#444; 
+        }
+	</style>
+</head>
+<body>
+	<h1>DETI Coin WebAssembly</h1>
+	<p>Coin search with scalar vs SIMD</p>
+	<p> A coin matches when <code>hash[0] == 0xAAD20250</code>. Speed is attempts / time / 1e6.</p>
+	<fieldset>
+		<legend>Settings</legend>
+		<label>Iterations:
+			<input id="iterations" type="number" value="300000" min="1000" step="10000" />
+		</label>
+        <label>Difficulty (hex chars match 0xAAD20250):
+            <input id="difficulty" type="number" value="8" min="1" max="8" />
+        </label>
+		<label>Prefix:
+			<input id="prefix" type="text" maxlength="28" placeholder="e.g. AAD" />
+		</label>
+		<label><input id="perLane" type="checkbox" /> Treat SIMD iterations as per-lane (×4 attempts)</label>
+		<div style="margin-top:10px;">
+			<button id="loadBtn">Load Modules</button>
+			<button id="scalarBtn" disabled>Run Scalar</button>
+			<button id="simdBtn" disabled>Run SIMD</button>
+			<button id="compareBtn" disabled>Compare</button>
+			<button id="untilCoinBtn" disabled>Until Coin (SIMD)</button>
+		</div>
+		<small>Note: Effective attempts in SIMD = raw *4 if the checkbox is ticked.</small>
+	</fieldset>
+	<div id="log">Modules not loaded.</div>
+    <fieldset id="coinsFS" style="max-width:650px;margin-top:20px;">
+        <legend>Coins</legend>
+        <div id="coinsInfo">No coins yet.</div>
+        <small>Each line: Vdd:COINSTRING (difficulty tag + coin text)</small>
+    </fieldset>
+<script src="wasm_search_scalar.js"></script>
+<script src="wasm_search_simd.js"></script>
+<script>
+let scalarMod, simdMod;
+const logEl      = document.getElementById('log');
+const itEl       = document.getElementById('iterations');
+const prefixEl   = document.getElementById('prefix');
+const perLaneEl  = document.getElementById('perLane');
+const diffEl     = document.getElementById('difficulty');
+const loadBtn    = document.getElementById('loadBtn');
+const scalarBtn  = document.getElementById('scalarBtn');
+const simdBtn    = document.getElementById('simdBtn');
+const compareBtn = document.getElementById('compareBtn');
+const untilBtn   = document.getElementById('untilCoinBtn');
+const coinsInfoEl = document.getElementById('coinsInfo');
+
+let coinsList = [];
+
+function esc(s){ return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function updateCoinsUI(){
+    if(coinsList.length===0){ coinsInfoEl.textContent='No coins yet.'; return; }
+    const text = coinsList.join('\n');
+    coinsInfoEl.innerHTML = `Total: ${coinsList.length} <button onclick="downloadCoinsVault()" style="margin-left:10px;padding:4px 8px;">Download Vault</button><br/><pre style="background:#fff;border:1px solid #ddd;padding:6px;overflow:auto;max-height:200px;">${esc(text)}</pre>`;
+}
+
+function downloadCoinsVault(){
+    if(coinsList.length === 0){
+        alert('No coins to download.');
+        return;
+    }
+    const content = coinsList.join('\n') + '\n';
+    const blob = new Blob([content], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '108583_113085_webassembly_vault.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function addCoinLine(line){ 
+    console.log(`[addCoinLine] called with: "${line}"`);
+    if(!line) {
+        console.log('[addCoinLine] line is empty/falsy, skipping');
+        return;
+    }
+    if(!coinsList.includes(line)){ 
+        coinsList.push(line); 
+        console.log(`[addCoinLine] added to list, total now: ${coinsList.length}`);
+        updateCoinsUI(); 
+    } else {
+        console.log('[addCoinLine] duplicate, not added');
+    }
+}
+
+function extractBufferCoins(mod, ptrName, lenName){
+    if(!mod || !mod.HEAPU8) {
+        console.log('[extractBufferCoins] mod or HEAPU8 missing');
+        return [];
+    }
+    const ptr = mod.ccall(ptrName,'number',[],[]);
+    const len = mod.ccall(lenName,'number',[],[]);
+    console.log(`[extractBufferCoins] ${ptrName}=${ptr}, ${lenName}=${len}`);
+    if(!ptr || !len) {
+        console.log('[extractBufferCoins] ptr or len is zero/null');
+        return [];
+    }
+    if(len < 0 || ptr+len > mod.HEAPU8.length) {
+        console.log('[extractBufferCoins] invalid bounds');
+        return [];
+    }
+    const raw = new TextDecoder().decode(mod.HEAPU8.subarray(ptr, ptr+len));
+    console.log(`[extractBufferCoins] raw buffer content:\n${raw}`);
+    const lines = raw.split(/\n/).map(s=>s.trim()).filter(s=>s.length);
+    console.log(`[extractBufferCoins] extracted ${lines.length} lines:`, lines);
+    return lines;
+}
+
+function setLog(text) {
+    logEl.textContent = text;
+}
+
+function append(line) {
+    logEl.textContent += '\n' + line;
+}
+
+function fmt(n) {
+    return n.toLocaleString();
+}
+
+async function loadModules() {
+    setLog('Loading modules...');
+    scalarMod = await WasmSearchScalar();
+    simdMod   = await WasmSearchSIMD();
+    const d = +diffEl.value;
+    scalarMod.ccall('set_difficulty', null, ['number'], [d]);
+    simdMod.ccall('set_difficulty_simd', null, ['number'], [d]);
+    setLog('Loaded. Ready.');
+    scalarBtn.disabled = false;
+    simdBtn.disabled   = false;
+    compareBtn.disabled= false;
+    untilBtn.disabled  = false;
+}
+
+diffEl.onchange = () => {
+    if(!scalarMod || !simdMod) return;
+    let d = +diffEl.value; if(d<1) d=1; if(d>8) d=8; diffEl.value = d;
+    scalarMod.ccall('set_difficulty', null, ['number'], [d]);
+    simdMod.ccall('set_difficulty_simd', null, ['number'], [d]);
+    append(`Difficulty set to ${d} hex chars (expected attempts ≈ ${Math.pow(16,d).toLocaleString()})`);
+};
+
+function readFirst(mod, ptrName, lenName) {
+    if(!mod || !mod.ccall || !mod.HEAPU8) return '';
+    const ptr = mod.ccall(ptrName,'number',[],[]);
+    const len = mod.ccall(lenName,'number',[],[]);
+    if(!ptr || !len) return '';
+    if(ptr < 0 || len < 0 || (ptr + len) > mod.HEAPU8.length) return '';
+    try {
+        return new TextDecoder().decode(mod.HEAPU8.subarray(ptr, ptr + len));
+    } catch(e){ return ''; }
+}
+
+function runScalar() {
+    const iterations = +itEl.value;
+    const prefix     = prefixEl.value;
+    const startNonce = Math.floor(Math.random() * 1e6);
+    const t0 = performance.now();
+    scalarMod.ccall('search_coins', null, ['number','number','string'], [startNonce, iterations, prefix]);
+    let attempts = scalarMod.ccall('get_attempts','number',[],[]);
+    if (typeof attempts === 'bigint') attempts = Number(attempts);
+    const coins   = scalarMod.ccall('get_coins_found','number',[],[]);
+    const coinTxt = readFirst(scalarMod,'get_first_coin_ptr','get_first_coin_length');
+    const dt      = (performance.now() - t0) / 1000;
+    const speed   = (attempts / dt / 1e6).toFixed(2);
+    append(`[Scalar] attempts=${fmt(attempts)} coins=${coins} time=${dt.toFixed(3)}s speed=${speed} MH/s`);
+    if (coinTxt) append('First coin:\n' + coinTxt);
+    const bufCoins = extractBufferCoins(scalarMod,'get_coins_buffer_ptr','get_coins_buffer_length');
+    bufCoins.forEach(addCoinLine);
+    return { attempts, coins, speed: +speed };
+}
+
+function runSIMD() {
+    const iterations = +itEl.value;
+    const prefix     = prefixEl.value;
+    const perLane    = perLaneEl.checked;
+    const startNonce = Math.floor(Math.random() * 1e6);
+    const t0 = performance.now();
+    simdMod.ccall('search_coins_simd', null, ['number','number','string'], [startNonce, iterations, prefix]);
+    let raw = simdMod.ccall('get_attempts_simd','number',[],[]);
+    if (typeof raw === 'bigint') raw = Number(raw);
+    const attempts = raw * (perLane ? 4 : 1);
+    const coins    = simdMod.ccall('get_coins_found_simd','number',[],[]);
+    const coinTxt  = readFirst(simdMod,'get_first_coin_ptr_simd','get_first_coin_length_simd');
+    const dt       = (performance.now() - t0) / 1000;
+    const speed    = (attempts / dt / 1e6).toFixed(2);
+    append(`[SIMD] raw=${fmt(raw)} eff=${fmt(attempts)} coins=${coins} time=${dt.toFixed(3)}s speed=${speed} MH/s`);
+    if (coinTxt) append('First coin:\n' + coinTxt);
+    const bufCoins = extractBufferCoins(simdMod,'get_coins_buffer_ptr_simd','get_coins_buffer_length_simd');
+    bufCoins.forEach(addCoinLine);
+    if (coins > 0 && bufCoins.length === 0 && coinTxt) {
+        const diffTag = String(diffEl.value).padStart(2,'0');
+        const line = 'V' + diffTag + ':' + coinTxt.replace(/\n.*$/,'').trim();
+        addCoinLine(line);
+    }
+    return { attempts, coins, speed: +speed };
+}
+
+function compareRuns() {
+    setLog('Comparing scalar then SIMD');
+    const scalarRes = runScalar();
+    const simdRes   = runSIMD();
+    if (scalarRes.speed > 0) {
+        append('Speedup (SIMD / Scalar) = ' + (simdRes.speed / scalarRes.speed).toFixed(2) + 'x');
+    }
+}
+
+function untilCoin() {
+    setLog('SIMD loop until coin or cap');
+    const prefix  = prefixEl.value;
+    const perLane = perLaneEl.checked;
+    const d       = +diffEl.value;
+    let batch = +itEl.value;
+    if (batch < 1000) batch = 1000;
+    let total = 0, coins = 0;
+    let nonce = Math.floor(Math.random() * 1e6);
+    const expected = Math.pow(16,d);
+    const cap = Math.min(expected * 10, 800000000); 
+    const t0  = performance.now();
+    while (coins === 0 && total < cap) {
+        simdMod.ccall('search_coins_simd', null, ['number','number','string'], [nonce, batch, prefix]);
+        let raw = simdMod.ccall('get_attempts_simd','number',[],[]);
+        if (typeof raw === 'bigint') raw = Number(raw);
+        const c  = simdMod.ccall('get_coins_found_simd','number',[],[]);
+        total += perLane ? raw * 4 : raw;
+        coins = c;
+        nonce += batch;
+        console.log(`[untilCoin] batch complete: c=${c}, coins=${coins}, total_attempts=${total}`);
+    }
+    console.log(`[untilCoin] Loop ended: coins=${coins}`);
+    console.log(`[untilCoin] simdMod:`, simdMod);
+    console.log(`[untilCoin] simdMod.HEAPU8:`, simdMod ? simdMod.HEAPU8 : 'simdMod is null/undefined');
+    console.log(`[untilCoin] typeof simdMod.ccall:`, typeof simdMod?.ccall);
+    if (coins > 0) {
+        try {
+            const ptr = simdMod.ccall('get_coins_buffer_ptr_simd','number',[],[]);
+            const len = simdMod.ccall('get_coins_buffer_length_simd','number',[],[]);
+            console.log(`[untilCoin] DIRECT call: ptr=${ptr}, len=${len}`);
+            console.log(`[untilCoin] HEAPU8.length=${simdMod.HEAPU8?.length}`);
+            if (ptr && len && simdMod.HEAPU8) {
+                const raw = new TextDecoder().decode(simdMod.HEAPU8.subarray(ptr, ptr+len));
+                console.log(`[untilCoin] DIRECT raw buffer:\n${raw}`);
+            }
+        } catch(e) {
+            console.error('[untilCoin] Direct extraction error:', e);
+        }
+        
+        const bufCoins = extractBufferCoins(simdMod,'get_coins_buffer_ptr_simd','get_coins_buffer_length_simd');
+        console.log(`[untilCoin] bufCoins.length=${bufCoins.length}`);
+        bufCoins.forEach(addCoinLine);
+    }
+    const dt    = (performance.now() - t0) / 1000;
+    const speed = (total / dt / 1e6).toFixed(2);
+    const pct = ((total/expected)*100).toFixed(2);
+    append(`[UntilCoin] attempts=${fmt(total)} coins=${coins} time=${dt.toFixed(3)}s speed=${speed} MH/s (progress≈${pct}% of expected ${fmt(expected)})`);
+    if (coins > 0) {
+        console.log(`[untilCoin] Found ${coins} coin(s), coinsList.length=${coinsList.length}`);
+        const coinTxt = readFirst(simdMod,'get_first_coin_ptr_simd','get_first_coin_length_simd');
+        console.log(`[untilCoin] first coin text: "${coinTxt}"`);
+        if (coinTxt) append('First coin:\n' + coinTxt);
+        if (coinsList.length === 0 && coinTxt) {
+            console.log('[untilCoin] FALLBACK: coinsList empty, synthesizing line');
+            const diffTag = String(diffEl.value).padStart(2,'0');
+            const fallbackLine = 'V' + diffTag + ':' + coinTxt.replace(/\n.*$/,'').trim();
+            console.log(`[untilCoin] fallback line: "${fallbackLine}"`);
+            addCoinLine(fallbackLine);
+        }
+        updateCoinsUI();
+        console.log(`[untilCoin] final coinsList:`, coinsList);
+    }
+}
+
+loadBtn.onclick    = loadModules;
+scalarBtn.onclick  = () => { setLog('Scalar run'); runScalar(); };
+simdBtn.onclick    = () => { setLog('SIMD run'); runSIMD(); };
+compareBtn.onclick = compareRuns;
+untilBtn.onclick   = untilCoin;
+</script>
+</body>
+</html>

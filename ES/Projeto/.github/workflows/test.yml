@@ -1,0 +1,203 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      backend_image:
+        description: 'Backend image to test'
+        required: true
+        type: string
+      frontend_image:
+        description: 'Frontend image to test'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: [self-hosted, Linux, X64, es-vm-ecommerce]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ============================================
+      # RUN TESTS WITH MAVEN
+      # ============================================
+      - name: Run Maven Tests
+        run: |
+          echo "🧪 Running backend tests with Maven..."
+          mkdir -p "$HOME/.m2"
+          HOST_UID=$(id -u)
+          HOST_GID=$(id -g)
+
+          docker run --rm \
+            --user "${HOST_UID}:${HOST_GID}" \
+            -e MAVEN_CONFIG=/tmp/.m2 \
+            -e HOME=/tmp \
+            -v "${{ github.workspace }}/backend:/workspace" \
+            -v "$HOME/.m2:/tmp/.m2" \
+            -w /workspace \
+            maven:3.9-eclipse-temurin-17 \
+            mvn -B clean verify \
+              -Dallure.results.directory=target/allure-results
+
+          echo "✅ Tests completed"
+
+      # ============================================
+      # GENERATE ALLURE REPORT
+      # ============================================
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          RESULTS_DIR="${{ github.workspace }}/backend/target/allure-results"
+          REPORT_DIR="${{ github.workspace }}/backend/target/allure-report"
+
+          if [ ! -d "$RESULTS_DIR" ]; then
+            echo "⚠️  No test results found, skipping report generation"
+            exit 0
+          fi
+
+          echo "📊 Generating Allure report..."
+          HOST_UID=$(id -u)
+          HOST_GID=$(id -g)
+
+          docker run --rm \
+            --user "${HOST_UID}:${HOST_GID}" \
+            -v "${{ github.workspace }}/backend:/workspace" \
+            -w /workspace \
+            eclipse-temurin:17-jdk \
+            bash -c "
+              ALLURE_VERSION=2.27.0
+              TEMP_DIR=\$(mktemp -d)
+
+              # Download and extract Allure
+              curl -sSL -o \"\$TEMP_DIR/allure.tgz\" \
+                \"https://github.com/allure-framework/allure2/releases/download/\${ALLURE_VERSION}/allure-\${ALLURE_VERSION}.tgz\"
+              tar -xzf \"\$TEMP_DIR/allure.tgz\" -C \"\$TEMP_DIR\"
+
+              # Generate report
+              \"\$TEMP_DIR/allure-\${ALLURE_VERSION}/bin/allure\" generate \
+                --clean target/allure-results \
+                -o target/allure-report
+
+              # Cleanup
+              rm -rf \"\$TEMP_DIR\"
+            "
+
+          echo "✅ Allure report generated"
+
+      # ============================================
+      # UPLOAD ARTIFACTS
+      # ============================================
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: backend/target/allure-results
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: backend/target/allure-report
+          if-no-files-found: ignore
+          retention-days: 30
+
+      # ============================================
+      # TEST SUMMARY
+      # ============================================
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "=================================="
+          echo "📊 TEST RESULTS"
+          echo "=================================="
+
+          # Parse test results if available
+          if [ -f "backend/target/surefire-reports/TEST-*.xml" ]; then
+            TOTAL=$(grep -h "tests=" backend/target/surefire-reports/TEST-*.xml | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            FAILURES=$(grep -h "failures=" backend/target/surefire-reports/TEST-*.xml | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            ERRORS=$(grep -h "errors=" backend/target/surefire-reports/TEST-*.xml | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+
+            echo "Total Tests: $TOTAL"
+            echo "Failures: $FAILURES"
+            echo "Errors: $ERRORS"
+            echo ""
+
+            if [ "$FAILURES" -eq 0 ] && [ "$ERRORS" -eq 0 ]; then
+              echo "✅ All tests passed!"
+            else
+              echo "❌ Some tests failed"
+            fi
+          else
+            echo "ℹ️  Test results not found"
+          fi
+
+          echo "=================================="
+
+  # ============================================
+  # FRONTEND TESTS (Optional - if you add them)
+  # ============================================
+  test-frontend:
+    name: Frontend Tests
+    runs-on: [self-hosted, Linux, X64, es-vm-ecommerce]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Run Frontend Tests
+        run: |
+          echo "🧪 Running frontend tests..."
+          CI=true npm test -- --watch=false --runInBand
+        working-directory: frontend
+
+  # ============================================
+  # SUMMARY JOB
+  # ============================================
+  summary:
+    name: Test Summary
+    needs: [test-backend, test-frontend]
+    if: always()
+    runs-on: [self-hosted, Linux, X64, es-vm-ecommerce]
+
+    steps:
+      - name: Check test results
+        run: |
+          BACKEND_RESULT="${{ needs.test-backend.result }}"
+          FRONTEND_RESULT="${{ needs.test-frontend.result }}"
+
+          echo "=================================="
+          echo "📋 TEST SUITE SUMMARY"
+          echo "=================================="
+          echo ""
+          echo "Backend Tests:  $BACKEND_RESULT"
+          echo "Frontend Tests: $FRONTEND_RESULT"
+          echo ""
+
+          if [ "$BACKEND_RESULT" == "success" ]; then
+            echo "✅ All tests passed - Ready to deploy"
+            exit 0
+          else
+            echo "❌ Tests failed - Deployment blocked"
+            exit 1
+          fi

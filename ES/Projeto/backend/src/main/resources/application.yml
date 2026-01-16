@@ -1,0 +1,99 @@
+server:
+  port: 5000
+
+spring:
+  application:
+    name: shophub-backend
+  
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:shophub}
+    username: ${DB_USER:shophub_user}
+    password: ${DB_PASSWORD:shophub_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+  
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_PUBLIC_URL:${KEYCLOAK_URL:http://localhost:8080}}/realms/${KEYCLOAK_REALM:ShopHub}
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:ShopHub}/protocol/openid-connect/certs
+
+# Keycloak Configuration
+keycloak:
+  url: ${KEYCLOAK_URL:http://localhost:8080}
+  public-url: ${KEYCLOAK_PUBLIC_URL:${KEYCLOAK_URL:http://localhost:8080}}
+  realm: ${KEYCLOAK_REALM:ShopHub}
+  client-id: ${KEYCLOAK_CLIENT_ID:ShopHub-realm}
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  
+  # OpenTelemetry Configuration
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+      timeout: 10s
+    metrics:
+      export:
+        url: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:http://localhost:4318/v1/metrics}
+        step: 5s
+  tracing:
+    sampling:
+      probability: 1
+  opentelemetry:
+    resource-attributes:
+      "service-name": ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    com.shophub: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+
+flagsmith:
+  enabled: ${FLAGSMITH_ENABLED:false}
+  environment-key: ${FLAGSMITH_ENVIRONMENT_KEY:}
+  api-url: ${FLAGSMITH_API_URL:https://edge.api.flagsmith.com/api/v1}
+  timeout: ${FLAGSMITH_TIMEOUT:5s}
+
+features:
+  landing-pages-enabled: ${FEATURES_LANDING_PAGES_ENABLED:true}
+  promotional-banners-enabled: ${FEATURES_PROMOTIONAL_BANNERS_ENABLED:true}
+  theme-customization-enabled: ${FEATURES_THEME_CUSTOMIZATION_ENABLED:true}
+
+# Ollama Configuration (Chatbot LLM)
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:gemma3:1b}

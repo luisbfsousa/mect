@@ -1,0 +1,173 @@
+name: Build
+
+on:
+  workflow_call:
+    outputs:
+      backend_image:
+        description: "Backend Docker image with tag"
+        value: ${{ jobs.build.outputs.backend_image }}
+      frontend_image:
+        description: "Frontend Docker image with tag"
+        value: ${{ jobs.build.outputs.frontend_image }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux, X64, es-vm-ecommerce]
+    outputs:
+      backend_image: ${{ steps.meta.outputs.backend_image }}
+      frontend_image: ${{ steps.meta.outputs.frontend_image }}
+
+    steps:
+      # ============================================
+      # SETUP
+      # ============================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load Environment Variables
+        run: |
+          if [ -f "${{ github.workspace }}/.env" ]; then
+            echo "Loading environment variables from .env file..."
+            export $(cat ${{ github.workspace }}/.env | grep -v '^#' | xargs)
+            # Export to GITHUB_ENV for subsequent steps
+            cat ${{ github.workspace }}/.env | grep -v '^#' | grep '=' >> $GITHUB_ENV
+            echo "✅ Environment variables loaded"
+          else
+            echo "❌ .env file not found! Please create one from .env.example"
+            exit 1
+          fi
+
+      - name: Set image tags
+        id: meta
+        run: |
+          # Use commit SHA for versioning (immutable)
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          # Tag with both SHA and 'latest'
+          BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}"
+          FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}"
+
+          echo "backend_image=${BACKEND_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "frontend_image=${FRONTEND_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "backend_image_latest=${BACKEND_IMAGE}:latest" >> $GITHUB_OUTPUT
+          echo "frontend_image_latest=${FRONTEND_IMAGE}:latest" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      # ============================================
+      # BUILD BACKEND
+      # ============================================
+      - name: Build Backend JAR
+        run: |
+          echo "🔨 Building backend JAR with Maven..."
+          mkdir -p "$HOME/.m2"
+          HOST_UID=$(id -u)
+          HOST_GID=$(id -g)
+
+          docker run --rm \
+            --user "${HOST_UID}:${HOST_GID}" \
+            -e MAVEN_CONFIG=/tmp/.m2 \
+            -e HOME=/tmp \
+            -v "${{ github.workspace }}/backend:/workspace" \
+            -v "$HOME/.m2:/tmp/.m2" \
+            -w /workspace \
+            maven:3.9-eclipse-temurin-17 \
+            mvn clean package -B -DskipTests=true
+
+          echo "✅ Backend JAR built"
+
+      # ============================================
+      # BUILD FRONTEND
+      # ============================================
+      - name: Build Frontend
+        run: |
+          echo "🔨 Building frontend React app..."
+          HOST_UID=$(id -u)
+          HOST_GID=$(id -g)
+
+          # Create npm cache directory
+          mkdir -p "${{ github.workspace }}/frontend/.npm-cache"
+
+          docker run --rm \
+            --user "${HOST_UID}:${HOST_GID}" \
+            -v "${{ github.workspace }}/frontend:/workspace" \
+            -w /workspace \
+            -e npm_config_cache=/workspace/.npm-cache \
+            -e REACT_APP_KEYCLOAK_URL=http://${{ env.DEPLOY_HOST_IP }}:8080 \
+            -e REACT_APP_KEYCLOAK_REALM=ShopHub \
+            -e REACT_APP_KEYCLOAK_CLIENT_ID=shophub-frontend \
+            -e REACT_APP_API_URL=http://${{ env.DEPLOY_HOST_IP }}/api \
+            node:18-alpine \
+            sh -c "npm ci && npm run build"
+
+          echo "✅ Frontend build completed"
+
+      # ============================================
+      # LOGIN TO REGISTRY
+      # ============================================
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      # ============================================
+      # BUILD AND PUSH DOCKER IMAGES
+      # ============================================
+      
+      - name: Build and Push Backend Image
+        run: |
+          cd backend
+
+          echo "🐳 Building backend Docker image..."
+          docker build \
+            -t ${{ steps.meta.outputs.backend_image }} \
+            -t ${{ steps.meta.outputs.backend_image_latest }} \
+            .
+
+          echo "📤 Pushing backend image..."
+          docker push ${{ steps.meta.outputs.backend_image }}
+          docker push ${{ steps.meta.outputs.backend_image_latest }}
+
+          echo "✅ Backend image pushed:"
+          echo "  - ${{ steps.meta.outputs.backend_image }}"
+          echo "  - ${{ steps.meta.outputs.backend_image_latest }}"
+
+      - name: Build and Push Frontend Image
+        run: |
+          cd frontend
+
+          echo "🐳 Building frontend Docker image..."
+          docker build \
+            -t ${{ steps.meta.outputs.frontend_image }} \
+            -t ${{ steps.meta.outputs.frontend_image_latest }} \
+            .
+
+          echo "📤 Pushing frontend image..."
+          docker push ${{ steps.meta.outputs.frontend_image }}
+          docker push ${{ steps.meta.outputs.frontend_image_latest }}
+
+          echo "✅ Frontend image pushed:"
+          echo "  - ${{ steps.meta.outputs.frontend_image }}"
+          echo "  - ${{ steps.meta.outputs.frontend_image_latest }}"
+
+      # ============================================
+      # SUMMARY
+      # ============================================
+      - name: Build Summary
+        run: |
+          echo "=================================="
+          echo "✅ BUILD COMPLETED"
+          echo "=================================="
+          echo ""
+          echo "📦 Images Built:"
+          echo "  Backend:  ${{ steps.meta.outputs.backend_image }}"
+          echo "  Frontend: ${{ steps.meta.outputs.frontend_image }}"
+          echo ""
+          echo "🔖 Tags:"
+          echo "  Commit SHA: ${{ steps.meta.outputs.short_sha }}"
+          echo "  Also tagged as: latest"
+          echo ""
+          echo "=================================="

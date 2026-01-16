@@ -1,0 +1,25 @@
+# Docker Images (will be replaced by CI/CD)
+backend_image  = "ghcr.io/detiuaveiro/group-project-es2526_203/backend:latest"
+frontend_image = "ghcr.io/detiuaveiro/group-project-es2526_203/frontend:latest"
+
+# Network Configuration (VM Production)
+deploy_host_ip = "131.163.96.54"
+
+# Database Password
+postgres_password = "shophub_password"
+
+# GitHub Container Registry
+github_token    = ""  # Set by CI/CD
+github_username = ""  # Set by CI/CD
+
+# Flagsmith Configuration (Backend)
+flagsmith_enabled         = "true"
+flagsmith_environment_key = "ser.8BPUBXwNZwjpPYoWkxQutt"  # Get from Flagsmith admin
+flagsmith_api_url        = "http://131.163.96.54:8000/api/v1"
+flagsmith_timeout        = "5s"
+
+# Flagsmith Configuration (Frontend)
+react_app_flagsmith_environment_id    = "dwuYC8a6HTirU2SQNkz7rX"  # Get from Flagsmith admin
+react_app_flagsmith_api_url          = "http://131.163.96.54:8000/api/v1"
+react_app_flagsmith_default_identity = ""
+react_app_flagsmith_enable_analytics = "true"

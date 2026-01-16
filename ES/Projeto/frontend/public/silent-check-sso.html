@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silent SSO Check</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <script>
+        console.log('Silent SSO check triggered');
+        parent.postMessage(location.href, location.origin);
+    </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+1.
+a) 
+There are several factors that can affect the need for better wireless networks. Some of the most important factors include:
+
+1. Increasing demand for bandwidth: As more and more devices connect to wireless networks, the demand for bandwidth increases. This can cause congestion on the network and lead to slower speeds and higher latency.
+
+2. Growing number of connected devices: The increasing number of devices connected to wireless networks, such as smartphones, tablets, and IoT devices, can put a strain on the network and make it difficult to manage and maintain.
+
+3. Need for higher speeds: As technology advances, users expect faster speeds and more reliable connections. This can put pressure on wireless networks to keep up with the demand for higher speeds.
+
+4. Range and coverage: As the demand for wireless networks increases, the need for better range and coverage becomes more important. This is especially true in areas with high population densities or in remote locations where there is limited infrastructure.
+
+5. Security: With the growing number of connected devices, it is important to ensure that wireless networks are secure and can protect against hacking and other cyber threats.
+
+6. Interference: Wireless networks can be affected by interference from other devices and equipment, such as microwaves and other electronic devices, which can cause signal degradation and poor performance.
+
+7. Power consumption: In order to support the increasing number of IoT devices and other low-power devices, wireless networks need to be optimized for low power consumption.
+
+Overall, the need for better wireless networks is driven by the growing demand for more bandwidth, faster speeds, better range and coverage, increased security, and reduced power consumption.
+
+All the factors mentioned previously are important in their own right but the most important factors that affect the need for better wireless networks are:
+
+1. Increasing demand for bandwidth: With more and more devices connecting to wireless networks, the demand for bandwidth increases. This can cause congestion on the network and lead to slower speeds and higher latency.
+
+2. Need for higher speeds: As technology advances, users expect faster speeds and more reliable connections. This can put pressure on wireless networks to keep up with the demand for higher speeds.
+
+3. Range and coverage: As the demand for wireless networks increases, the need for better range and coverage becomes more important. This is especially true in areas with high population densities or in remote locations where there is limited infrastructure.
+
+4. Security: With the growing number of connected devices, it is important to ensure that wireless networks are secure and can protect against hacking and other cyber threats.
+
+These factors are critical as they directly affect the user's experience and satisfaction with the wireless network, and any shortcomings in these areas can significantly impact the adoption and usage of the network. Increasing demand for bandwidth and the need for higher speeds affect the quality of service provided by the network, while range and coverage affect the availability and accessibility of the network. Security, on the other hand, is a critical aspect that affects the trust of the users on the network.
+
+b) (slide 181)
+WiFi networks use a technique called rate adaptation to deal with the problem of multiple coexisting bit-rates. Rate adaptation is a mechanism that allows wireless devices to automatically adjust their data transfer rate based on the current conditions of the wireless network.
+
+In a WiFi network, wireless devices can operate at different bit-rates depending on the capabilities of the device and the conditions of the network. Rate adaptation algorithms are used to adjust the bit-rate of the device in real-time to ensure that the device is operating at the highest possible bit-rate while still maintaining a stable connection.
+
+There are several different rate adaptation algorithms that can be used in WiFi networks, but most of them use similar techniques to adjust the bit-rate of the device. One common technique is to measure the signal quality and error rate of the wireless connection, and adjust the bit-rate accordingly.
+
+For example, if the signal quality is poor, the device will reduce its bit-rate to avoid errors and maintain a stable connection. If the signal quality improves, the device can increase its bit-rate to take advantage of the better conditions.
+
+This way, the rate adaptation algorithm allows wireless devices to automatically adjust their data transfer rate based on the current conditions of the wireless network, and thus it allows multiple coexisting bit-rates to coexist in the network without interfering with each other.
+
+In a WiFi network, the rate adaptation process is typically implemented by both the access point (AP) and the station (or client device). The AP and the station both have the capability to adjust the bit-rate of their wireless connection, but the decision of which bit-rate to use is typically made by the station.
+
+The AP sends information about the supported bit-rates and the current conditions of the network, such as the signal quality and error rate, to the station. The station uses this information to determine the best bit-rate to use based on its own capabilities and the current conditions of the network.
+
+The station will also take into account the capabilities of the AP to support different bit-rates, and the station will adapt its bit-rate accordingly. The station will also monitor the wireless connection and adjust the bit-rate in real-time to maintain a stable connection.
+
+In WiFi, the preamble is a sequence of bits that is transmitted at the beginning of a packet to help the receiver synchronize with the transmitter and detect the start of the packet. There are two types of preambles that are commonly used in WiFi: short preamble and long preamble.
+
+Short preamble: is used in 802.11b and 802.11g standards, it is a shorter sequence of bits that is transmitted at the beginning of a packet. The short preamble is less sensitive to interference and is more efficient, which allows for faster data transfer rates and greater throughput.
+
+Long preamble: is used in the older 802.11a and 802.11b standards, it is a longer sequence of bits that is transmitted at the beginning of a packet. The long preamble is more sensitive to interference, which makes it less efficient but more robust against errors.
+
+The choice of which preamble to use depends on the specific implementation of the wireless network, and it can be adjusted to optimize performance in different environments. For example, in environments with a lot of interference, it may be more beneficial to use the long preamble to ensure a more robust connection, while in environments with less interference, the short preamble can be used to achieve faster data transfer rates.
+
+e)
+Como é que se pode formar uma scatternet no Bluetooth? 
+A scatternet is a network of interconnected Bluetooth piconets. A piconet is a network of devices connected using Bluetooth technology, with one device acting as the master and the other devices acting as slaves. In a scatternet, multiple piconets are connected together, allowing devices in one piconet to communicate with devices in another piconet.
+
+There are a few different ways to form a scatternet, but one common method is as follows:
+
+1. A master device in one piconet establishes a connection with a slave device in another piconet.
+
+2. The slave device in the second piconet is then designated as a master, allowing it to create its own piconet.
+
+3. The master device in the first piconet then becomes a slave in the second piconet, allowing it to communicate with devices in the second piconet.
+
+4. Additional devices can then join the first and second piconets, creating a scatternet.
+
+It's worth noting that not all devices can act as a master or slave, and the formation of a scatternet is dependant on the capabilities of the devices. Also, Scatternet formation is not a standard feature in the Bluetooth protocol and may not be supported by all devices.
+
+__________________
+|   M            |		
+|	 S    ___|_______
+|    S        |  |	|
+|             |M/|	|
+|             |S |   S  |
+--------------|---	|
+	      |	  	|
+	      |	   S    |
+	      -----------
+	     
+__________________
+|   M            |
+|	 S    ___|_______
+|    S        |  |	|
+|             |  |	|
+|             |S |   S  |
+--------------|---	|
+	      |	      M	|
+	      |	  S     |
+	      -----------
+	      
+	      
+	      
+f)
+In a beacon-enable network, the device finds the beacon to synchronize to the superframe structure. Then uses slotted CSMA/CA to transmit its data. The coordinator indicates in the beacon that the data is pending. Device periodically listens to the beacon and transmits a MAC command request using slotted CSMA/CA if necessary.
+In a non-beacon-enable network, a device transmits a MAC command request using unslotted CSMA/CA. If the coordinator has its pending data, the coordinator transmits data frame using unslotted CSMA/CA. Otherwise, coordinator transmits a data frame with zero length payload.
+
+2.
+a)
+When choosing a technology for low speed communication, there are several criteria that should be considered:
+
+1-Range: The technology should have a sufficient range to cover the area of communication.
+
+2-Power consumption: The technology should be low power consuming since low-speed communication does not require high data rates and high power consumption is not necessary.
+
+3-Interference: The technology should be able to operate in environments where there is a high level of interference.
+
+4-Security: The technology should have a robust security mechanism to protect the data being transmitted.
+
+5-Reliability: The technology should be able to maintain a reliable communication link even in adverse conditions.
+
+6-Cost: The technology should be cost-effective, especially for low-speed communication devices.
+
+7-Scalability: The technology should be able to support a large number of devices and be easily expandable in case of future growth.
+
+8-Standardization: The technology should be widely used and standardized for compatibility with other devices and systems.
+
+9-Latency: The technology should have low latency, this is not very critical in low-speed communication but it could be important depending on the use case.
+
+10-Support: The technology should have good support and documentation to help with the implementation and troubleshooting.
+
+It is important to consider all the criteria and evaluate the different options available, to choose the technology that best fits the specific requirements of the low-speed communication application.
+
+
+b)
+
+
+
+

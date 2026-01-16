@@ -1,0 +1,30 @@
+Pergunta 1: b. VLAN 33 is an interconnection VLAN that only transports traffic from other VLANs
+O pacote ICMP mostra tráfego entre 10.33.33.1 e 10.33.33.3, indicando que VLAN 33 é usada para interconectar switches (trunk VLAN).
+
+
+Pergunta 2: a. The sender of the RTS is the Access Point (AP)
+No frame RTS (Request-to-Send), o transmitter address é D-LinkIn_6a:cc:68, que corresponde ao AP.
+
+
+Pergunta 3: Verdadeiro
+ACK frames em 802.11 contêm aceitação ou rejeição da associação solicitada pela estação.
+
+
+Pergunta 4: c. The machines 10.0.2.2 and 192.168.0.1 are the end-points of an IPsec tunnel
+O tráfego ISAKMP entre 11.11.0.x é para negociação IPsec, enquanto 10.0.2.2 e 192.168.0.1 são os endpoints reais do túnel (IPs internos).
+
+
+Pergunta 5: Verdadeiro
+ISAKMP Main Mode usa 6 mensagens para estabelecer a SA (Security Association) do IPsec.
+
+
+Pergunta 6: c. These two packets depict a SNMPv2c writing action with error from 192.1.1.1 to 192.1.1.101
+O "error-status: noAccess (6)" indica uma tentativa de escrita SNMP falhada de 192.1.1.1 para 192.1.1.101.
+
+
+Pergunta 7: Falso
+SNMPv3 suporta autenticação e privacidade, mas não é obrigatório usá-las.
+
+
+Pergunta 8: Falso
+OIDs são escritos da esquerda para direita (do geral para o específico), não o contrário.

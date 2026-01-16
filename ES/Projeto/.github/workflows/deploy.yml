@@ -1,0 +1,335 @@
+name: Deploy to Production
+
+on:
+  workflow_call:
+    inputs:
+      backend_image:
+        description: 'Backend image to deploy'
+        required: true
+        type: string
+      frontend_image:
+        description: 'Frontend image to deploy'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Linux, X64, es-vm-ecommerce]
+
+    steps:
+      # ============================================
+      # SETUP
+      # ============================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          clean: true
+
+      - name: Load Environment Variables
+        run: |
+          if [ -f "${{ github.workspace }}/.env" ]; then
+            echo "Loading environment variables from .env file..."
+            export $(cat ${{ github.workspace }}/.env | grep -v '^#' | xargs)
+            # Export to GITHUB_ENV for subsequent steps
+            cat ${{ github.workspace }}/.env | grep -v '^#' | grep '=' >> $GITHUB_ENV
+            echo "✅ Environment variables loaded"
+          else
+            echo "❌ .env file not found! Please create one from .env.example"
+            exit 1
+          fi
+
+      - name: Clean Terraform Cache
+        working-directory: terraform
+        run: |
+          echo "🧹 Cleaning Terraform cache from previous runs..."
+          rm -rf .terraform
+          echo "✅ Cache cleaned"
+
+      - name: Login to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Pull Images
+        run: |
+          echo "📥 Pulling images..."
+          docker pull ${{ inputs.backend_image }}
+          docker pull ${{ inputs.frontend_image }}
+          echo "✅ Images pulled successfully"
+
+      # ============================================
+      # PRE-DEPLOYMENT CHECKS
+      # ============================================
+      - name: Verify Infrastructure
+        run: |
+          echo "🔍 Verifying infrastructure services..."
+
+          # Check network
+          if ! docker network inspect shophub-network >/dev/null 2>&1; then
+            echo "❌ Network 'shophub-network' not found"
+            echo "Run infrastructure setup workflow first!"
+            exit 1
+          fi
+          echo "✅ Network exists"
+
+          # Check Keycloak
+          if ! docker ps | grep -q shophub-keycloak; then
+            echo "⚠️  Keycloak not running"
+            echo "Run infrastructure setup workflow first!"
+            exit 1
+          fi
+          echo "✅ Keycloak running"
+
+          # Check Flagsmith
+          if ! docker ps | grep -q shophub-flagsmith; then
+            echo "⚠️  Flagsmith not running"
+            echo "Run infrastructure setup workflow first!"
+            exit 1
+          fi
+          echo "✅ Flagsmith running"
+
+          # Check Ollama
+          if ! docker ps | grep -q shophub-ollama; then
+            echo "⚠️  Ollama not running (will be started by Terraform)"
+          else
+            echo "✅ Ollama running"
+          fi
+
+          echo "✅ Infrastructure check passed"
+
+      # ============================================
+      # CLEANUP EXISTING DEPLOYMENT
+      # ============================================
+      - name: Cleanup Existing Application Containers
+        run: |
+          echo "🧹 Cleaning up existing application containers..."
+          
+          # Stop and remove application containers (NOT Keycloak/Flagsmith/Ollama)
+          docker stop shophub-backend-1 shophub-backend-2 shophub-frontend-1 shophub-frontend-2 \
+                      shophub-postgres shophub-nginx-lb shophub-otel-collector \
+                      shophub-prometheus shophub-grafana 2>/dev/null || true
+          
+          docker rm -f shophub-backend-1 shophub-backend-2 shophub-frontend-1 shophub-frontend-2 \
+                       shophub-postgres shophub-nginx-lb shophub-otel-collector \
+                       shophub-prometheus shophub-grafana 2>/dev/null || true
+          
+          # NOTE: NOT removing volumes - they persist to keep database data between deploys
+          # docker volume rm shophub-postgres-data 2>/dev/null || true
+          
+          echo "✅ Application containers cleaned up (data preserved)"
+
+      # ============================================
+      # TERRAFORM SETUP
+      # ============================================
+      - name: Setup Terraform
+        run: |
+          REQUIRED_VERSION="1.14.1"
+          CURRENT_VERSION=$(terraform version -json 2>/dev/null | jq -r '.terraform_version' || echo "none")
+
+          if [ "$CURRENT_VERSION" != "$REQUIRED_VERSION" ]; then
+            echo "📦 Installing Terraform $REQUIRED_VERSION (current: $CURRENT_VERSION)..."
+            cd /tmp
+            wget -q https://releases.hashicorp.com/terraform/${REQUIRED_VERSION}/terraform_${REQUIRED_VERSION}_linux_amd64.zip
+            unzip -q terraform_${REQUIRED_VERSION}_linux_amd64.zip
+            sudo mv terraform /usr/local/bin/
+            rm terraform_${REQUIRED_VERSION}_linux_amd64.zip
+          else
+            echo "✅ Terraform $REQUIRED_VERSION already installed"
+          fi
+
+          terraform version
+
+      - name: Create Terraform Configuration
+        working-directory: terraform
+        run: |
+          echo "📝 Creating Terraform configuration..."
+
+          cat > terraform.tfvars <<EOF
+          # Application Images
+          backend_image  = "${{ inputs.backend_image }}"
+          frontend_image = "${{ inputs.frontend_image }}"
+
+          # Network Configuration
+          deploy_host_ip = "${{ env.DEPLOY_HOST_IP }}"
+
+          # Deployment Configuration
+          project_name_prefix = "shophub"
+          backend_port_start  = ${{ env.BACKEND_PORT_1 }}
+          frontend_port_start = ${{ env.FRONTEND_PORT_1 }}
+          replica_count       = 2
+
+          # Database Configuration
+          postgres_password = "${{ env.POSTGRES_PASSWORD }}"
+
+          # CORS Configuration
+          cors_allowed_origins = "${{ env.CORS_ALLOWED_ORIGINS }}"
+
+          # Flagsmith Configuration (Backend)
+          flagsmith_enabled         = "${{ env.FLAGSMITH_ENABLED }}"
+          flagsmith_environment_key = "${{ env.FLAGSMITH_ENVIRONMENT_KEY }}"
+          flagsmith_api_url         = "http://shophub-flagsmith:8000/api/v1"
+          flagsmith_timeout         = "5s"
+
+          # Flagsmith Configuration (Frontend)
+          react_app_flagsmith_api_url          = "http://${{ env.DEPLOY_HOST_IP }}:8000${{ env.REACT_APP_FLAGSMITH_API_URL_PATH }}"
+          react_app_flagsmith_environment_id   = "${{ env.REACT_APP_FLAGSMITH_ENVIRONMENT_ID }}"
+          react_app_flagsmith_default_identity = "${{ env.REACT_APP_FLAGSMITH_DEFAULT_IDENTITY }}"
+          react_app_flagsmith_enable_analytics = "${{ env.REACT_APP_FLAGSMITH_ENABLE_ANALYTICS }}"
+
+          # OpenTelemetry Configuration
+          otel_traces_endpoint  = "http://shophub-otel-collector:4317"
+          otel_metrics_endpoint = "http://shophub-otel-collector:4317"
+          EOF
+
+          echo "✅ Terraform configuration created"
+          
+      # ============================================
+      # TERRAFORM DEPLOYMENT
+      # ============================================
+      - name: Terraform Init
+        working-directory: terraform
+        run: |
+          echo "🔧 Initializing Terraform..."
+          terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: |
+          echo "📋 Creating deployment plan..."
+          terraform plan -var-file=terraform.tfvars -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: |
+          echo "🚀 Deploying application..."
+          terraform apply -auto-approve tfplan
+
+          echo "✅ Terraform deployment complete"
+
+      # ============================================
+      # POST-DEPLOYMENT HEALTH CHECKS
+      # ============================================
+      - name: Wait for Database
+        run: |
+          echo "⏳ Waiting for database..."
+          timeout 60 bash -c 'until docker exec shophub-postgres pg_isready -U shophub_user 2>/dev/null; do sleep 2; done'
+          echo "✅ Database ready"
+
+      - name: Wait for Backend
+        run: |
+          echo "⏳ Waiting for backend services..."
+
+          for port in ${{ env.BACKEND_PORT_1 }} ${{ env.BACKEND_PORT_2 }}; do
+            echo "Checking backend on port ${port}..."
+            timeout 180 bash -c "
+              until curl -sf http://localhost:${port}/actuator/health >/dev/null 2>&1; do
+                echo 'Waiting for backend port ${port}...'
+                sleep 5
+              done
+            "
+            echo "✅ Backend port ${port} ready"
+          done
+
+      - name: Wait for Frontend
+        run: |
+          echo "⏳ Waiting for frontend services..."
+
+          for port in ${{ env.FRONTEND_PORT_1 }} ${{ env.FRONTEND_PORT_2 }}; do
+            echo "Checking frontend on port ${port}..."
+            timeout 90 bash -c "
+              until curl -sf http://localhost:${port} >/dev/null 2>&1; do
+                echo 'Waiting for frontend port ${port}...'
+                sleep 3
+              done
+            "
+            echo "✅ Frontend port ${port} ready"
+          done
+
+      - name: Wait for Load Balancer
+        run: |
+          echo "⏳ Waiting for load balancer..."
+
+          if ! docker ps | grep -q shophub-nginx-lb; then
+            echo "⚠️  Load balancer not found (optional)"
+            exit 0
+          fi
+
+          timeout 60 bash -c "
+            until curl -sf http://localhost:80 >/dev/null 2>&1; do
+              echo 'Waiting for load balancer...'
+              sleep 3
+            done
+          "
+          echo "✅ Load balancer ready"
+
+      # ============================================
+      # ENDPOINT VERIFICATION
+      # ============================================
+      - name: Test Backend Endpoints
+        run: |
+          echo "🧪 Testing backend endpoints..."
+
+          # Test individual replicas
+          for port in ${{ env.BACKEND_PORT_1 }} ${{ env.BACKEND_PORT_2 }}; do
+            RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null http://${{ env.DEPLOY_HOST_IP }}:${port}/api/products)
+
+            if [ "$RESPONSE" != "200" ]; then
+              echo "❌ Backend port ${port} returned HTTP $RESPONSE"
+              exit 1
+            fi
+            echo "✅ Backend port ${port}: OK"
+          done
+
+          # Test load balancer (if exists)
+          if docker ps | grep -q shophub-nginx-lb; then
+            RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null http://${{ env.DEPLOY_HOST_IP }}/api/products)
+            if [ "$RESPONSE" != "200" ]; then
+              echo "❌ Load balancer returned HTTP $RESPONSE"
+              exit 1
+            fi
+            echo "✅ Load balancer: OK"
+          fi
+
+      - name: Test Frontend
+        run: |
+          echo "🧪 Testing frontend..."
+
+          # Test individual replicas
+          for port in ${{ env.FRONTEND_PORT_1 }} ${{ env.FRONTEND_PORT_2 }}; do
+            RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null http://${{ env.DEPLOY_HOST_IP }}:${port})
+
+            if [ "$RESPONSE" != "200" ]; then
+              echo "❌ Frontend port ${port} returned HTTP $RESPONSE"
+              exit 1
+            fi
+            echo "✅ Frontend port ${port}: OK"
+          done
+
+      # ============================================
+      # DEPLOYMENT SUMMARY
+      # ============================================
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "=================================="
+          echo "📊 DEPLOYMENT STATUS"
+          echo "=================================="
+          echo ""
+          echo "🐳 Running Containers:"
+          docker ps --format "table {{.Names}}\t{{.Status}}" | grep shophub || echo "No containers found"
+          echo ""
+          echo "🌐 Services:"
+          echo "  Frontend:  http://${{ env.DEPLOY_HOST_IP }}"
+          echo "  Backend:   http://${{ env.DEPLOY_HOST_IP }}/api"
+          echo ""
+          echo "🔄 Backend Replicas:"
+          echo "  Port ${{ env.BACKEND_PORT_1 }}: http://${{ env.DEPLOY_HOST_IP }}:${{ env.BACKEND_PORT_1 }}/api"
+          echo "  Port ${{ env.BACKEND_PORT_2 }}: http://${{ env.DEPLOY_HOST_IP }}:${{ env.BACKEND_PORT_2 }}/api"
+          echo ""
+          echo "🔄 Frontend Replicas:"
+          echo "  Port ${{ env.FRONTEND_PORT_1 }}: http://${{ env.DEPLOY_HOST_IP }}:${{ env.FRONTEND_PORT_1 }}"
+          echo "  Port ${{ env.FRONTEND_PORT_2 }}: http://${{ env.DEPLOY_HOST_IP }}:${{ env.FRONTEND_PORT_2 }}"
+          echo ""
+          echo "=================================="

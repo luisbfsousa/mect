@@ -1,0 +1,286 @@
+package com.shophub.controller;
+
+import com.shophub.dto.BlogPostDTO;
+import com.shophub.dto.CreateBlogPostRequest;
+import com.shophub.dto.UpdateBlogPostRequest;
+import com.shophub.service.BlogPostService;
+import com.shophub.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class BlogPostControllerTest {
+
+    @Mock
+    private BlogPostService blogPostService;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private Jwt jwt;
+
+    @InjectMocks
+    private BlogPostController blogPostController;
+
+    private BlogPostDTO sampleBlogPost;
+    private CreateBlogPostRequest createRequest;
+    private UpdateBlogPostRequest updateRequest;
+
+    @BeforeEach
+    void setUp() {
+        sampleBlogPost = BlogPostDTO.builder()
+                .blogPostId(1)
+                .title("Test Blog Post")
+                .content("This is a test blog post content")
+                .excerpt("Test excerpt")
+                .slug("test-blog-post")
+                .status("published")
+                .featuredImage("https://example.com/image.jpg")
+                .authorId("author-123")
+                .authorName("Test Author")
+                .categories(Arrays.asList("Technology", "Programming"))
+                .tags(Arrays.asList("java", "spring", "testing"))
+                .viewCount(10)
+                .publishedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        createRequest = CreateBlogPostRequest.builder()
+                .title("New Blog Post")
+                .content("This is new blog post content")
+                .excerpt("New excerpt")
+                .slug("new-blog-post")
+                .status("draft")
+                .featuredImage("https://example.com/new-image.jpg")
+                .categories(Arrays.asList("Technology"))
+                .tags(Arrays.asList("java", "spring"))
+                .build();
+
+        updateRequest = UpdateBlogPostRequest.builder()
+                .title("Updated Blog Post")
+                .content("This is updated blog post content")
+                .status("published")
+                .build();
+    }
+
+    @Test
+    void getPublishedBlogPosts_ShouldReturnPublishedPosts() {
+        // Given
+        List<BlogPostDTO> publishedPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostService.getPublishedBlogPosts()).thenReturn(publishedPosts);
+
+        // When
+        ResponseEntity<List<BlogPostDTO>> response = blogPostController.getPublishedBlogPosts();
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        assertEquals("Test Blog Post", response.getBody().get(0).getTitle());
+        verify(blogPostService).getPublishedBlogPosts();
+    }
+
+    @Test
+    void getBlogPostById_ShouldReturnPost_WhenPostExists() {
+        // Given
+        when(blogPostService.getBlogPostById(1)).thenReturn(sampleBlogPost);
+
+        // When
+        ResponseEntity<BlogPostDTO> response = blogPostController.getBlogPostById(1);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Test Blog Post", response.getBody().getTitle());
+        verify(blogPostService).getBlogPostById(1);
+    }
+
+    @Test
+    void getBlogPostBySlug_ShouldReturnPost_WhenPostExists() {
+        // Given
+        when(blogPostService.getBlogPostBySlug("test-blog-post")).thenReturn(sampleBlogPost);
+
+        // When
+        ResponseEntity<BlogPostDTO> response = blogPostController.getBlogPostBySlug("test-blog-post");
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("test-blog-post", response.getBody().getSlug());
+        verify(blogPostService).getBlogPostBySlug("test-blog-post");
+    }
+
+    @Test
+    void searchBlogPosts_ShouldReturnMatchingPosts() {
+        // Given
+        List<BlogPostDTO> searchResults = Arrays.asList(sampleBlogPost);
+        when(blogPostService.searchBlogPosts("test")).thenReturn(searchResults);
+
+        // When
+        ResponseEntity<List<BlogPostDTO>> response = blogPostController.searchBlogPosts("test");
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        verify(blogPostService).searchBlogPosts("test");
+    }
+
+    @Test
+    void getBlogPostsByCategory_ShouldReturnPostsInCategory() {
+        // Given
+        List<BlogPostDTO> categoryPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostService.getBlogPostsByCategory("Technology")).thenReturn(categoryPosts);
+
+        // When
+        ResponseEntity<List<BlogPostDTO>> response = blogPostController.getBlogPostsByCategory("Technology");
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        verify(blogPostService).getBlogPostsByCategory("Technology");
+    }
+
+    @Test
+    void getBlogPostsByTag_ShouldReturnPostsWithTag() {
+        // Given
+        List<BlogPostDTO> tagPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostService.getBlogPostsByTag("java")).thenReturn(tagPosts);
+
+        // When
+        ResponseEntity<List<BlogPostDTO>> response = blogPostController.getBlogPostsByTag("java");
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        verify(blogPostService).getBlogPostsByTag("java");
+    }
+
+    @Test
+    void getRecentBlogPosts_ShouldReturnRecentPosts() {
+        // Given
+        List<BlogPostDTO> recentPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostService.getRecentBlogPosts(5)).thenReturn(recentPosts);
+
+        // When
+        ResponseEntity<List<BlogPostDTO>> response = blogPostController.getRecentBlogPosts(5);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        verify(blogPostService).getRecentBlogPosts(5);
+    }
+
+    @Test
+    void getAllBlogPosts_ShouldReturnAllPosts() {
+        // Given
+        List<BlogPostDTO> allPosts = Arrays.asList(sampleBlogPost);
+        when(blogPostService.getAllBlogPosts()).thenReturn(allPosts);
+
+        // When
+        ResponseEntity<List<BlogPostDTO>> response = blogPostController.getAllBlogPosts(jwt);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        verify(blogPostService).getAllBlogPosts();
+    }
+
+    @Test
+    void createBlogPost_ShouldCreatePost_WhenValidRequest() {
+        // Given
+        when(jwt.getSubject()).thenReturn("author-123");
+        when(jwt.getClaimAsString("name")).thenReturn("Test Author");
+        when(blogPostService.createBlogPost(any(CreateBlogPostRequest.class), anyString(), anyString()))
+                .thenReturn(sampleBlogPost);
+
+        // When
+        ResponseEntity<BlogPostDTO> response = blogPostController.createBlogPost(jwt, createRequest);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("Test Blog Post", response.getBody().getTitle());
+        verify(blogPostService).createBlogPost(any(CreateBlogPostRequest.class), anyString(), anyString());
+    }
+
+    @Test
+    void updateBlogPost_ShouldUpdatePost_WhenPostExists() {
+        // Given
+        when(blogPostService.updateBlogPost(1, updateRequest)).thenReturn(sampleBlogPost);
+
+        // When
+        ResponseEntity<BlogPostDTO> response = blogPostController.updateBlogPost(1, updateRequest);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Test Blog Post", response.getBody().getTitle());
+        verify(blogPostService).updateBlogPost(1, updateRequest);
+    }
+
+    @Test
+    void deleteBlogPost_ShouldDeletePost_WhenPostExists() {
+        // Given
+        doNothing().when(blogPostService).deleteBlogPost(1);
+
+        // When
+        ResponseEntity<Void> response = blogPostController.deleteBlogPost(1);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(blogPostService).deleteBlogPost(1);
+    }
+
+    @Test
+    void getBlogStats_ShouldReturnStatistics() {
+        // Given
+        Map<String, Object> stats = Map.of(
+            "published_posts", 5L,
+            "draft_posts", 2L,
+            "archived_posts", 1L,
+            "total_views", 100L
+        );
+        when(blogPostService.getBlogPostCountByStatus("published")).thenReturn(5L);
+        when(blogPostService.getBlogPostCountByStatus("draft")).thenReturn(2L);
+        when(blogPostService.getBlogPostCountByStatus("archived")).thenReturn(1L);
+        when(blogPostService.getTotalViewCount()).thenReturn(100L);
+
+        // When
+        ResponseEntity<Map<String, Object>> response = blogPostController.getBlogStats();
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(blogPostService).getBlogPostCountByStatus("published");
+        verify(blogPostService).getBlogPostCountByStatus("draft");
+        verify(blogPostService).getBlogPostCountByStatus("archived");
+        verify(blogPostService).getTotalViewCount();
+    }
+}
+
