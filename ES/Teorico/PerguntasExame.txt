@@ -1,0 +1,127 @@
+What is Eat you own dog food?
+Who does backlog?(product owner vs product manager)
+What is SAST?
+Retrocessing from Green to Blue crashed database, what is the main reason why
+Terraform variables should not be kept in state file (isto era a resposta)
+What happens to depreciated something in terraform
+You want to work on legacy code, no merges, how to reconstruct model? (branch something)
+What from the 3 allows to see what took longer (tracing)
+Como funciona o MCP protocol (não fazia puto de ideia)
+How to invoke Github workflow with parameters (workflow dispatch)
+Qual é o inverso mau da piramide de testing? (ice cream cone ou seja la como se chama)
+Como deve ser a piramide de testing organizada?
+O que se deve fazer com as flags depois das features serem aceites? (mandei duplas e errei)
+Qual é a vantagem de usar user stories invés de horas (qualquer coisa sobre não julga a performance do desenvolvedor)
+Mais quantidade de deploys ajuda com qual dos requisitos da DORA? (menos tempo a concertar erros/crashes)
+
+3 pilares desenvolvimento
+toggle features (diferentes tipos, qual o melhor para o cenario proposto)
+agile ... para que serve? (Prioritiza clientes, Prioritiza seguir um plano, Renovar contratos, (algo do genero) )
+Eat your own dog food
+Terraform, duas pessoas ao mesmo tempo o que acontece
+Terraform é sequencial pelo YAML ou de outra forma
+Local dos github actions
+Num projeto esta pessoa esta responsavel por .... e faz ....
+Availabilitys (as de %)
+Availability (esta sempre no ar? tem backups? conseguias verificar?
+
+observabilidade vs monitorizacao
+Sprint3, labels para os testes (ci-testing ou la cm era)
+daily box in scrum, 4h 1h 30min 15min
+pet vs caddle, descartaveis e essenciais
+piramide dos testes
+
+
+------------------------ Treino gerada pelo gemini
+
+1.O que significa a expressão "Eat your own dog food" (ou Dogfooding) em desenvolvimento de software? 
+a. A equipa deve alimentar-se bem para manter a produtividade.
+X b. Uma empresa deve usar internamente o seu próprio software para validar a qualidade antes de o entregar aos clientes.
+c. É um termo para descrever código "feio" ou mal estruturado.
+d. Significa que o Product Owner deve testar o código pessoalmente.
+
+2. No Scrum, quem é o responsável final pela gestão do Backlog? (Product Owner vs Product Manager)
+a. Scrum Master
+b. Product Manager
+X c. Product Owner
+d. Tech Lead
+
+3.Qual é a principal vantagem de usar "User Stories" e "Story Points" em vez de horas absolutas?
+a. Permite calcular o custo exato em euros do projeto.
+X b. Evita julgar a performance individual do programador e foca-se na complexidade relativa da tarefa.
+c. As horas são impossíveis de medir em sistemas informáticos.
+d. O cliente prefere saber quantos pontos tem o projeto.
+
+4.De acordo com os valores de Agile, o que é mais valorizado do que "seguir um plano"? 
+a. Documentação abrangente.
+X b. Responder à mudança.
+c. Negociação de contratos.
+d. Processos e ferramentas.
+
+5.Porque é que as variáveis sensíveis (secrets) não devem ser guardadas no ficheiro de estado (`tfstate`) do Terraform?
+a. Porque o Terraform não consegue ler segredos encriptados.
+X b. Porque o ficheiro de estado é muitas vezes guardado em texto limpo (JSON) e pode expor credenciais a quem tiver acesso ao backend.
+c. Porque o ficheiro fica demasiado pesado.
+d. Porque provoca erros de sintaxe no `terraform plan`.
+
+6.O que acontece no Terraform quando duas pessoas tentam aplicar alterações ao mesmo tempo (State Locking)?  
+a. O ficheiro de estado fica corrompido e perde-se o histórico.
+b. O Terraform faz merge automático das duas alterações.
+X c. O sistema bloqueia a segunda execução (Lock) para impedir inconsistências e conflitos de escrita.
+d. A infraestrutura é duplicada.
+
+7.Qual é o evento (trigger) no GitHub Actions que permite invocar um workflow manualmente com parâmetros?  
+a. `workflow_run`
+b. `push`
+X c. `workflow_dispatch`
+d. `repository_dispatch`
+
+8.O que se deve fazer com as "Feature Flags" (Toggles) depois das funcionalidades serem aceites e estarem estáveis?  
+a. Devem ser mantidas para sempre por segurança.
+X b. Devem ser removidas do código para evitar dívida técnica e complexidade.
+c. Devem ser comentadas, mas não apagadas.
+d. Devem ser passadas para o ambiente de testes apenas.
+
+9.Qual é o "inverso mau" da Pirâmide de Testes (muitos testes manuais/UI, poucos unitários)?  
+X a. O Cone de Gelado (Ice Cream Cone).
+b. O Cubo de Testes.
+c. A Ampulheta de Testes.
+d. O Troféu de Testes.
+
+10.O que é o SAST (Static Application Security Testing)?  
+a. Testes de segurança que analisam a aplicação em execução (dinâmicos).
+X b. Análise do código-fonte ou binários sem executar a aplicação, à procura de vulnerabilidades conhecidas.
+c. Testes de penetração manuais.
+d. Monitorização de logs em tempo real.
+
+11.Se tiver de trabalhar em código "Legacy" sem testes e não puder fazer merges, qual é a primeira prioridade para reconstruir o modelo com segurança? 
+a. Apagar tudo e começar de novo.
+X b. Criar testes de caracterização (ou Golden Master) para garantir que o comportamento atual não muda antes de refatorizar.
+c. Alterar a base de dados primeiro.
+d. Escrever documentação sobre o que o código deveria fazer.
+
+12.Qual dos três pilares da observabilidade permite ver "o que demorou mais tempo" numa transação distribuída?  
+a. Logs.
+b. Metrics.
+X c. Tracing.
+d. Alerting.
+
+13.Segundo as métricas DORA, uma maior quantidade (frequência) de deploys ajuda a melhorar qual requisito? 
+X a. O tempo para concertar erros (MTTR) e a estabilidade geral, pois as alterações são menores.
+b. O custo da infraestrutura na cloud.
+c. A quantidade de funcionalidades entregues, mas com mais bugs.
+d. A complexidade do código.
+
+14. Ao retroceder (rollback) de uma versão Green para Blue, a base de dados "crashou".Qual é a razão principal?  
+a. O servidor Blue estava desligado.
+X b. Alterações na base de dados (migrações) feitas pela versão Green não eram compatíveis com a versão antiga (Blue).
+c. O load balancer não funcionou.
+d. Faltava memória no servidor.
+
+15.O que é o protocolo MCP (mencionado como "não fazia puto de ideia") no contexto de ferramentas modernas de IA?  
+a. Master Control Program.
+X b. Model Context Protocol, para padronizar como a IA se conecta a dados e ferramentas externas.
+c. Micro Service Protocol.
+d. Multi-Cloud Provisioning.
+
+

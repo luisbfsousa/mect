@@ -70,8 +70,8 @@ Select the **one best answer** for each question.
 21. Which of the following is NOT one of the three Scrum roles?
    - A) Product Owner
    - B) Scrum Master
-   - C) Project Manager ? aparentemente esta ?
-   x D) Developer
+   X C) 
+   - D) Developer
 
 22. What is the primary purpose of the Daily Scrum?
    - A) To report progress to management
