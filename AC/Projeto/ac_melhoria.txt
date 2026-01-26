@@ -1,0 +1,662 @@
+CORE1
+
+conf t
+ip cef
+mpls traffic-eng tunnels
+class-map match-all MAP-L2
+match ip dscp af31
+class-map match-all MAP-L1
+match ip dscp ef
+policy-map POLICY
+class MAP-L1
+priority 10000
+class MAP-L2
+bandwidth 10000
+int Loopback0
+ip address 10.0.0.1 255.255.255.255
+ip ospf 1 area 0
+no shut
+int f0/0
+ip address 10.0.1.10 255.255.255.252
+ip ospf 1 area 0
+no shut
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+int f0/1
+ip address 10.0.1.2 255.255.255.252
+ip ospf 1 area 0
+no shut
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+router ospf 1
+mpls traffic-eng router-id Loopback0
+mpls traffic-eng area 0
+router bgp 22900
+bgp router-id 10.0.0.1
+network 10.0.0.0 mask 255.255.252.0
+end
+write
+
+CORE 2
+
+conf t
+ip cef
+mpls traffic-eng tunnels
+class-map match-all MAP-L2
+match ip dscp af31
+class-map match-all MAP-L1
+match ip dscp ef
+policy-map POLICY
+class MAP-L1
+priority 10000
+class MAP-L2
+bandwidth 10000
+int Loopback0
+ip address 10.0.0.2 255.255.255.255
+ip ospf 1 area 0
+no shut
+int f0/0
+ip address 10.0.1.14 255.255.255.252
+ip ospf 1 area 0
+no shut
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+int f0/1
+ip address 10.0.1.6 255.255.255.252
+ip ospf 1 area 0
+no shut
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+router ospf 1
+mpls traffic-eng router-id Loopback0
+mpls traffic-eng area 0
+router bgp 22900
+bgp router-id 10.0.0.2
+network 10.0.0.0 mask 255.255.252.0
+end
+write
+
+
+LISBOA
+
+conf t
+ip cef
+mpls traffic-eng tunnels
+class-map match-all MAP-L2
+match ip dscp af31
+class-map match-all MAP-L1
+match ip dscp ef
+class-map match-all L1
+match access-group 101
+class-map match-all L2
+match access-group 102
+policy-map POLICY
+class MAP-L1
+priority 10000
+class MAP-L2
+bandwidth 10000
+policy-map MARK-PACKET
+class L1
+set ip dscp ef
+class L2
+set ip dscp af31
+int Tunnel1
+ip unnumbered Loopback0
+tunnel mode mpls traffic-eng
+tunnel destination 10.0.0.11
+tunnel mpls traffic-eng priority 7 7
+tunnel mpls traffic-eng bandwidth 10000
+tunnel mpls traffic-eng path-option 1 dynamic
+int Loopback0
+ip address 10.0.0.12 255.255.255.255
+no shut
+ip ospf 1 area 0
+int f0/0
+ip address 10.0.1.9 255.255.255.252
+ip ospf 1 area 0
+no shut
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+int f0/1
+ip address 10.0.1.13 255.255.255.252
+no shut
+ip ospf 1 area 0
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+int f1/0
+ip address 10.0.2.5 255.255.255.252
+no shut
+ip ospf 1 area 0
+service-policy input MARK-PACKET
+ip policy route-map TUNNEL
+router ospf 1
+mpls traffic-eng router-id Loopback0
+mpls traffic-eng area 0
+exit
+access-list 101 permit udp any any eq 4789
+access-list 102 permit udp any any eq 4790
+route-map TUNNEL permit 10
+match ip address 101
+set interface Tunnel1
+int Tunnel1
+end
+write
+
+
+PORTO
+
+conf t
+ip cef
+mpls traffic-eng tunnels
+class-map match-all MAP-L2
+match ip dscp af31
+class-map match-all MAP-L1
+match ip dscp ef
+class-map match-all L1
+match access-group 101
+class-map match-all L2
+match access-group 102
+policy-map POLICY
+class MAP-L1
+priority 10000
+class MAP-L2
+bandwidth 10000
+policy-map MARK-PACKET
+class L1
+set ip dscp ef
+class L2
+set ip dscp af31
+int Tunnel1
+ip unnumbered Loopback0
+tunnel mode mpls traffic-eng
+tunnel destination 10.0.0.12
+tunnel mpls traffic-eng priority 7 7
+tunnel mpls traffic-eng bandwidth 10000
+tunnel mpls traffic-eng path-option 1 dynamic
+int Loopback0
+ip address 10.0.0.11 255.255.255.255
+no shut
+ip ospf 1 area 0
+int f0/0
+ip address 10.0.1.1 255.255.255.252
+ip ospf 1 area 0
+no shut
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+int f0/1
+ip address 10.0.1.5 255.255.255.252
+no shut
+ip ospf 1 area 0
+mpls ip
+mpls traffic-eng tunnels
+service-policy output POLICY
+ip rsvp bandwidth 20000 20000
+int f1/0
+ip address 10.0.2.1 255.255.255.252
+no shut
+ip ospf 1 area 0
+service-policy input MARK-PACKET
+ip policy route-map TUNNEL
+router ospf 1
+mpls traffic-eng router-id Loopback0
+mpls traffic-eng area 0
+exit
+access-list 101 permit udp any any eq 4789
+access-list 102 permit udp any any eq 4790
+route-map TUNNEL permit 10
+match ip address 101
+set interface Tunnel1
+end
+write
+
+
+S1
+conf t
+int lo
+ip address 10.0.0.21
+no shut
+ip ospf 1 area 0
+no shut
+int eth0
+ip address 10.0.2.6/30
+no shut
+ip ospf 1 area 0
+int eth1
+ip address 10.0.3.1/30
+ip ospf 1 area 0
+no shut
+int eth2
+ip address 10.0.3.5/30
+no shut
+ip ospf 1 area 0
+int eth3
+ip address 10.0.3.9/30
+ip ospf 1 area 0
+no shut
+router bgp 23000
+bgp router-id 10.0.0.21
+neighbor LEAVES peer-group
+neighbor LEAVES remote-as 23000
+neighbor 10.0.0.31 peer-group LEAVES
+neighbor 10.0.0.32 peer-group LEAVES
+neighbor 10.0.0.33 peer-group LEAVES
+neighbor 10.0.0.22 remote-as 23000
+neighbor 10.0.0.22 update-source lo
+address-family l2vpn evpn
+neighbor LEAVES activate
+neighbor LEAVES route-reflector-client
+neighbor 10.0.0.22 activate
+advertise-all-vni
+exit-address-family
+router ospf 1
+ospf router-id 10.0.0.21
+end
+write
+
+S2
+conf t
+int lo
+ip address 10.0.0.22/32
+ip ospf 1 area 0
+no shut
+int eth0
+ip address 10.0.2.2/30
+no shut
+ip ospf 1 area 0
+int eth1
+ip address 10.0.4.1/30
+ip ospf 1 area 0
+no shut
+int eth2
+ip address 10.0.4.5/30
+no shut
+ip ospf 1 area 0
+int eth3
+ip address 10.0.4.9/30
+ip ospf 1 area 0
+no shut
+router bgp 23000
+bgp router-id 10.0.0.22
+neighbor LEAVES peer-group
+neighbor LEAVES remote-as 23000
+neighbor 10.0.0.41 peer-group LEAVES
+neighbor 10.0.0.42 peer-group LEAVES
+neighbor 10.0.0.43 peer-group LEAVES
+neighbor 10.0.0.21 remote-as 23000
+neighbor 10.0.0.21 update-source lo
+address-family l2vpn evpn
+neighbor LEAVES activate
+neighbor LEAVES route-reflector-client
+neighbor 10.0.0.21 activate
+advertise-all-vni
+exit-address-family
+router ospf 1
+ospf router-id 10.0.0.22
+end
+write
+
+L11
+ip link add br10 type bridge
+ip link add br20 type bridge
+ip link add br30 type bridge
+ip link add br40 type bridge
+ip link add link eth1 link10 type vlan id 10
+ip link add link eth1 link20 type vlan id 20
+ip link add link eth1 link30 type vlan id 30
+ip link set link10 master br10
+ip link set link20 master br20
+ip link set link30 master br30
+ip link set eth2 master br40
+ip link add vni10 type vxlan local 10.0.0.31 dstport 4789 id 10 nolearning
+ip link add vni20 type vxlan local 10.0.0.31 dstport 4789 id 20 nolearning
+ip link add vni30 type vxlan local 10.0.0.31 dstport 4789 id 30 nolearning
+ip link add vni40 type vxlan local 10.0.0.31 dstport 4790 id 40 nolearning
+ip link set vni10 master br10
+ip link set vni20 master br20
+ip link set vni30 master br30
+ip link set vni40 master br40
+ip link set eth1 up
+ip link set eth2 up
+ip link set link10 up
+ip link set link20 up
+ip link set link30 up
+ip link set vni10 up
+ip link set vni20 up
+ip link set vni30 up
+ip link set vni40 up
+ip link set br10 up
+ip link set br20 up
+ip link set br30 up
+ip link set br40 up
+
+
+vtysh
+conf t
+int eth0
+ip address 10.0.3.2/30
+no shut
+ip ospf 1 area 0
+int lo
+ip address 10.0.0.31/32
+no shut
+ip ospf 1 area 0
+router bgp 23000
+bgp router-id 10.0.0.31
+neighbor 10.0.0.21 remote-as 23000
+neighbor 10.0.0.21 update-source lo
+address-family l2vpn evpn
+neighbor 10.0.0.21 activate
+advertise-all-vni
+exit
+router ospf 1
+ospf router-id 10.0.0.31
+end
+write
+
+
+L12
+ip link add br10 type bridge
+ip link add br20 type bridge
+ip link add br30 type bridge
+ip link add br40 type bridge
+ip link add link eth1 link10 type vlan id 10
+ip link add link eth1 link20 type vlan id 20
+ip link add link eth1 link30 type vlan id 30
+ip link set link10 master br10
+ip link set link20 master br20
+ip link set link30 master br30
+ip link set eth2 master br40
+ip link add vni10 type vxlan local 10.0.0.32 dstport 4789 id 10 nolearning
+ip link add vni20 type vxlan local 10.0.0.32 dstport 4789 id 20 nolearning
+ip link add vni30 type vxlan local 10.0.0.32 dstport 4789 id 30 nolearning
+ip link add vni40 type vxlan local 10.0.0.32 dstport 4790 id 40 nolearning
+ip link set vni10 master br10
+ip link set vni20 master br20
+ip link set vni30 master br30
+ip link set vni40 master br40
+ip link set eth1 up
+ip link set eth2 up
+ip link set link10 up
+ip link set link20 up
+ip link set link30 up
+ip link set vni10 up
+ip link set vni20 up
+ip link set vni30 up
+ip link set vni40 up
+ip link set br10 up
+ip link set br20 up
+ip link set br30 up
+ip link set br40 up
+
+
+vtysh
+conf t
+int eth0
+ip address 10.0.3.6/30
+no shut
+ip ospf 1 area 0
+int lo
+ip address 10.0.0.32/32
+no shut
+ip ospf 1 area 0
+router bgp 23000
+bgp router-id 10.0.0.32
+neighbor 10.0.0.21 remote-as 23000
+neighbor 10.0.0.21 update-source lo
+address-family l2vpn evpn
+neighbor 10.0.0.21 activate
+advertise-all-vni
+exit
+router ospf 1
+ospf router-id 10.0.0.32
+end
+write
+
+
+L13
+ip link add br10 type bridge
+ip link add br20 type bridge
+ip link add br30 type bridge
+ip link add br40 type bridge
+ip link add link eth1 link10 type vlan id 10
+ip link add link eth1 link20 type vlan id 20
+ip link add link eth1 link30 type vlan id 30
+ip link set link10 master br10
+ip link set link20 master br20
+ip link set link30 master br30
+ip link set eth2 master br40
+ip link add vni10 type vxlan local 10.0.0.33 dstport 4789 id 10 nolearning
+ip link add vni20 type vxlan local 10.0.0.33 dstport 4789 id 20 nolearning
+ip link add vni30 type vxlan local 10.0.0.33 dstport 4789 id 30 nolearning
+ip link add vni40 type vxlan local 10.0.0.33 dstport 4790 id 40 nolearning
+ip link set vni10 master br10
+ip link set vni20 master br20
+ip link set vni30 master br30
+ip link set vni40 master br40
+ip link set eth1 up
+ip link set eth2 up
+ip link set link10 up
+ip link set link20 up
+ip link set link30 up
+ip link set vni10 up
+ip link set vni20 up
+ip link set vni30 up
+ip link set vni40 up
+ip link set br10 up
+ip link set br20 up
+ip link set br30 up
+ip link set br40 up
+
+
+vtysh
+conf t
+int eth0
+ip address 10.0.3.10/30
+no shut
+ip ospf 1 area 0
+int lo
+ip address 10.0.0.33/32
+no shut
+ip ospf 1 area 0
+router bgp 23000
+bgp router-id 10.0.0.33
+neighbor 10.0.0.21 remote-as 23000
+neighbor 10.0.0.21 update-source lo
+address-family l2vpn evpn
+neighbor 10.0.0.21 activate
+advertise-all-vni
+exit
+router ospf 1
+ospf router-id 10.0.0.33
+end
+write
+
+
+L21
+ip link add br10 type bridge
+ip link add br20 type bridge
+ip link add br30 type bridge
+ip link add br40 type bridge
+ip link add link eth1 link10 type vlan id 10
+ip link add link eth1 link20 type vlan id 20
+ip link add link eth1 link30 type vlan id 30
+ip link set link10 master br10
+ip link set link20 master br20
+ip link set link30 master br30
+ip link set eth2 master br40
+ip link add vni10 type vxlan local 10.0.0.41 dstport 4789 id 10 nolearning
+ip link add vni20 type vxlan local 10.0.0.41 dstport 4789 id 20 nolearning
+ip link add vni30 type vxlan local 10.0.0.41 dstport 4789 id 30 nolearning
+ip link add vni40 type vxlan local 10.0.0.41 dstport 4790 id 40 nolearning
+ip link set vni10 master br10
+ip link set vni20 master br20
+ip link set vni30 master br30
+ip link set vni40 master br40
+ip link set eth1 up
+ip link set eth2 up
+ip link set link10 up
+ip link set link20 up
+ip link set link30 up
+ip link set vni10 up
+ip link set vni20 up
+ip link set vni30 up
+ip link set vni40 up
+ip link set br10 up
+ip link set br20 up
+ip link set br30 up
+ip link set br40 up
+
+
+vtysh
+conf t
+int eth0
+ip address 10.0.4.2/30
+no shut
+ip ospf 1 area 0
+int lo
+ip address 10.0.0.41/32
+no shut
+ip ospf 1 area 0
+router bgp 23000
+bgp router-id 10.0.0.41
+neighbor 10.0.0.22 remote-as 23000
+neighbor 10.0.0.22 update-source lo
+address-family l2vpn evpn
+neighbor 10.0.0.22 activate
+advertise-all-vni
+exit
+router ospf 1
+ospf router-id 10.0.0.41
+end
+write
+
+L22
+ip link add br10 type bridge
+ip link add br20 type bridge
+ip link add br30 type bridge
+ip link add br40 type bridge
+ip link add link eth1 link10 type vlan id 10
+ip link add link eth1 link20 type vlan id 20
+ip link add link eth1 link30 type vlan id 30
+ip link set link10 master br10
+ip link set link20 master br20
+ip link set link30 master br30
+ip link set eth2 master br40
+ip link add vni10 type vxlan local 10.0.0.42 dstport 4789 id 10 nolearning
+ip link add vni20 type vxlan local 10.0.0.42 dstport 4789 id 20 nolearning
+ip link add vni30 type vxlan local 10.0.0.42 dstport 4789 id 30 nolearning
+ip link add vni40 type vxlan local 10.0.0.42 dstport 4790 id 40 nolearning
+ip link set vni10 master br10
+ip link set vni20 master br20
+ip link set vni30 master br30
+ip link set vni40 master br40
+ip link set eth1 up
+ip link set eth2 up
+ip link set link10 up
+ip link set link20 up
+ip link set link30 up
+ip link set vni10 up
+ip link set vni20 up
+ip link set vni30 up
+ip link set vni40 up
+ip link set br10 up
+ip link set br20 up
+ip link set br30 up
+ip link set br40 up
+
+
+vtysh
+conf t
+int eth0
+ip address 10.0.4.6/30
+no shut
+ip ospf 1 area 0
+int lo
+ip address 10.0.0.42/32
+no shut
+ip ospf 1 area 0
+router bgp 23000
+bgp router-id 10.0.0.42
+neighbor 10.0.0.22 remote-as 23000
+neighbor 10.0.0.22 update-source lo
+address-family l2vpn evpn
+neighbor 10.0.0.22 activate
+advertise-all-vni
+exit
+router ospf 1
+ospf router-id 10.0.0.42
+end
+write
+
+
+L23
+ip link add br10 type bridge
+ip link add br20 type bridge
+ip link add br30 type bridge
+ip link add br40 type bridge
+ip link add link eth1 link10 type vlan id 10
+ip link add link eth1 link20 type vlan id 20
+ip link add link eth1 link30 type vlan id 30
+ip link set link10 master br10
+ip link set link20 master br20
+ip link set link30 master br30
+ip link set eth2 master br40
+ip link add vni10 type vxlan local 10.0.0.43 dstport 4789 id 10 nolearning
+ip link add vni20 type vxlan local 10.0.0.43 dstport 4789 id 20 nolearning
+ip link add vni30 type vxlan local 10.0.0.43 dstport 4789 id 30 nolearning
+ip link add vni40 type vxlan local 10.0.0.43 dstport 4790 id 40 nolearning
+ip link set vni10 master br10
+ip link set vni20 master br20
+ip link set vni30 master br30
+ip link set vni40 master br40
+ip link set eth1 up
+ip link set eth2 up
+ip link set link10 up
+ip link set link20 up
+ip link set link30 up
+ip link set vni10 up
+ip link set vni20 up
+ip link set vni30 up
+ip link set vni40 up
+ip link set br10 up
+ip link set br20 up
+ip link set br30 up
+ip link set br40 up
+
+
+vtysh
+conf t
+int eth0
+ip address 10.0.4.10/30
+no shut
+ip ospf 1 area 0
+int lo
+ip address 10.0.0.43/32
+no shut
+ip ospf 1 area 0
+router bgp 23000
+bgp router-id 10.0.0.43
+neighbor 10.0.0.22 remote-as 23000
+neighbor 10.0.0.22 update-source lo
+address-family l2vpn evpn
+neighbor 10.0.0.22 activate
+advertise-all-vni
+exit
+router ospf 1
+ospf router-id 10.0.0.43
+end
+write

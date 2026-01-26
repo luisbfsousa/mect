@@ -1,0 +1,195 @@
+SNMP/SSH
+
+CORE1 
+
+conf t
+snmp-server community public ro
+snmp-server community private rw
+snmp-server group v3users v3 auth
+snmp-server user monitor v3users v3 auth md5 monitorpass123
+snmp-server trap-source Loopback0
+snmp-server enable traps snmp linkdown linkup coldstart
+snmp-server enable traps ospf statechange
+snmp-server enable traps bgp bgpBackwardTransition bgpEstablishedNotification
+snmp-server enable traps rsvp
+snmp-server host 10.0.0.100 public
+ip ssh version 2
+line vty 0 4
+transport input ssh
+login local
+username admin privilege 15 secret Cisco123
+end
+write
+
+
+CORE 2
+
+conf t
+snmp-server community public ro
+snmp-server community private rw
+snmp-server group v3users v3 auth
+snmp-server user monitor v3users v3 auth md5 monitorpass123
+snmp-server trap-source Loopback0
+snmp-server enable traps snmp linkdown linkup coldstart
+snmp-server enable traps ospf statechange
+snmp-server enable traps bgp bgpBackwardTransition bgpEstablishedNotification
+snmp-server enable traps rsvp
+snmp-server host 10.0.0.100 public
+ip ssh version 2
+line vty 0 4
+transport input ssh
+login local
+username admin privilege 15 secret Cisco123
+end
+write
+
+
+LISBOA
+
+conf t
+snmp-server community public ro
+snmp-server community private rw
+snmp-server group v3users v3 auth
+snmp-server user monitor v3users v3 auth md5 monitorpass123
+snmp-server trap-source Loopback0
+snmp-server enable traps snmp linkdown linkup coldstart
+snmp-server enable traps ospf statechange
+snmp-server enable traps bgp bgpBackwardTransition bgpEstablishedNotification
+snmp-server enable traps rsvp
+snmp-server host 10.0.0.100 public
+ip ssh version 2
+line vty 0 4
+transport input ssh
+login local
+username admin privilege 15 secret Cisco123
+end
+write
+
+
+PORTO 
+
+conf t
+snmp-server community public ro
+snmp-server community private rw
+snmp-server group v3users v3 auth
+snmp-server user monitor v3users v3 auth md5 monitorpass123
+snmp-server trap-source Loopback0
+snmp-server enable traps snmp linkdown linkup coldstart
+snmp-server enable traps ospf statechange
+snmp-server enable traps bgp bgpBackwardTransition bgpEstablishedNotification
+snmp-server enable traps rsvp
+snmp-server host 10.0.0.100 public
+ip ssh version 2
+line vty 0 4
+transport input ssh
+login local
+username admin privilege 15 secret Cisco123
+end
+write
+
+
+S1 
+
+vtysh -c "conf t" -c "snmp serve" -c "snmp community public ro" -c "snmp community private rw" -c "snmp trap-source Loopback0" -c "snmp trap linkdown" -c "snmp trap linkup" -c "log file /var/log/frr/s1.log" -c "end"
+systemctl restart frr
+
+
+S2 
+
+vtysh -c "conf t" -c "snmp serve" -c "snmp community public ro" -c "snmp community private rw" -c "snmp trap-source Loopback0" -c "snmp trap linkdown" -c "snmp trap linkup" -c "log file /var/log/frr/s2.log" -c "end"
+systemctl restart frr
+
+L11
+
+sudo apt-get install -y snmpd snmp openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo tee /etc/snmp/snmpd.conf > /dev/null << 'EOF'
+rocommunity public
+rwcommunity private 127.0.0.1
+trapsink 10.0.0.100
+sysdescr "L11 Leaf Switch"
+sysContact monitoring@company.com
+sysLocation "Datacenter 1, Rack 1"
+EOF
+sudo systemctl restart snmpd
+
+
+L12
+
+sudo apt-get install -y snmpd snmp openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo tee /etc/snmp/snmpd.conf > /dev/null << 'EOF'
+rocommunity public
+rwcommunity private 127.0.0.1
+trapsink 10.0.0.100
+sysdescr "L12 Leaf Switch"
+sysContact monitoring@company.com
+sysLocation "Datacenter 1, Rack 1"
+EOF
+sudo systemctl restart snmpd
+
+
+L13
+
+sudo apt-get install -y snmpd snmp openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo tee /etc/snmp/snmpd.conf > /dev/null << 'EOF'
+rocommunity public
+rwcommunity private 127.0.0.1
+trapsink 10.0.0.100
+sysdescr "L13 Leaf Switch"
+sysContact monitoring@company.com
+sysLocation "Datacenter 1, Rack 1"
+EOF
+sudo systemctl restart snmpd
+
+
+L21 
+
+sudo apt-get install -y snmpd snmp openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo tee /etc/snmp/snmpd.conf > /dev/null << 'EOF'
+rocommunity public
+rwcommunity private 127.0.0.1
+trapsink 10.0.0.100
+sysdescr "L21 Leaf Switch"
+sysContact monitoring@company.com
+sysLocation "Datacenter 2, Rack 2"
+EOF
+sudo systemctl restart snmpd
+
+
+L22 
+
+sudo apt-get install -y snmpd snmp openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo tee /etc/snmp/snmpd.conf > /dev/null << 'EOF'
+rocommunity public
+rwcommunity private 127.0.0.1
+trapsink 10.0.0.100
+sysdescr "L22 Leaf Switch"
+sysContact monitoring@company.com
+sysLocation "Datacenter 2, Rack 2"
+EOF
+sudo systemctl restart snmpd
+
+
+L23 
+
+sudo apt-get install -y snmpd snmp openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo tee /etc/snmp/snmpd.conf > /dev/null << 'EOF'
+rocommunity public
+rwcommunity private 127.0.0.1
+trapsink 10.0.0.100
+sysdescr "L23 Leaf Switch"
+sysContact monitoring@company.com
+sysLocation "Datacenter 2, Rack 2"
+EOF
+sudo systemctl restart snmpd

@@ -1,0 +1,36 @@
+#!/bin/sh
+
+ip link set eth2 up
+udhcpc -i eth2 -t 5 -q
+
+if ! command -v snmpd > /dev/null; then
+    echo "A instalar pacotes..."
+    apk update
+    apk add net-snmp net-snmp-tools openssh busybox-extras sed
+fi
+
+ssh-keygen -A
+mkdir -p /var/run/sshd
+
+sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+if ! grep -q "^PermitRootLogin yes" /etc/ssh/sshd_config; then
+    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+fi
+
+echo "root:Cisco123" | chpasswd
+
+/usr/sbin/sshd
+
+if [ ! -f /etc/frr/snmpd.conf ]; then
+    echo "agentAddress udp:161" > /etc/frr/snmpd.conf
+    echo "master agentx" >> /etc/frr/snmpd.conf
+    echo "rocommunity public" >> /etc/frr/snmpd.conf
+    echo "rwcommunity private" >> /etc/frr/snmpd.conf
+    # Adiciona o hostname automaticamente
+    echo "sysdescr $(hostname)" >> /etc/frr/snmpd.conf
+fi
+
+mkdir -p /etc/snmp
+cp /etc/frr/snmpd.conf /etc/snmp/snmpd.conf
+snmpd &
