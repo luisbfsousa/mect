@@ -1,0 +1,27 @@
+Grupo I (3-4 linhas, 0.8 pontos)
+
+1. O protocolo BGP usa identificadores de AS entre 2 a 4 bytes. Porquê é que não existe apenas um intervalo?
+2. Qual é o aspecto associado ao tema de "sincronização do BGP"?
+3. Em termos de QoS qual a diferenca entre shapping e dropping?
+4. Acha que o leaky bucket é utilizado FREQUENTEMENTE nas redes comerciais? Porquê?
+5. Para que servem label stacking em MPLS?
+6. Porquê que precisamos de EVPNs MP-BGP?
+7. Como usar etiquetas stacking em MPLS?
+8. Descreva como usaria VXLAN numa oferta de serviços de conectividade para grandes companhias.
+9. Qual a diferença do Conditional Get usado no http?
+10. Qual a diferença conceptual entre CMIS e CMIP?
+11. Para que serve o ASN.1 e os mecanismos de TLV que aí implementa?
+
+Grupo II (5-10 linhas, 1.3 pontos)
+
+A. O BGP é classificado como sendo um protocolo "path-vector" ao contrário dos conceitos de "distance-vector" e de "link-state". Como é que um protocolo "path-vector" se diferencia destes?
+B. Consegue implementar mecanismos de Assured Forwarding em Intserv?
+C. Não podemos ter uma tabela de routing único, em vez de separar as tabelas de routing em "tabela global" e "tabela para VRF"?
+D. Qual o papel da redirecção do DNS numa CDN?
+E. Relacione a separação funcional FCP do OSI com as diferentes camadas do modelo TMN. Que relação(ões) consegue estabelecer?
+
+Grupo III (15-20 linhas, 2 pontos)
+
+OA. Que funções (princípios) têm de existir num sistema de comunicações para garantir QoS? 
+OB. Até ao mostrado não discutiu mecanismos de gestão de redes e sistemas. Que razões vê para esta omissão não ter sido tratada mais cedo nas cadeiras de redes? 
+OC. Comente na forma como vê os atributos Local Preference, Multi-exit Discriminator, e MED num ambiente de Multi-homed Transit AS.
